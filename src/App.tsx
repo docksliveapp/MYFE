@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   AlertCircle,
+  ArrowLeft,
   ArrowRight,
   Bot,
   Briefcase,
@@ -10,6 +11,7 @@ import {
   ChevronRight,
   Copy,
   Cpu,
+  ExternalLink,
   Eye,
   FileCheck2,
   FileSearch,
@@ -25,7 +27,6 @@ import {
   Phone,
   Scale,
   Shield,
-  ShieldCheck,
   ShoppingBag,
   Sparkles,
   Truck,
@@ -34,6 +35,8 @@ import {
 } from 'lucide-react';
 import { RoyalLogo } from './components/RoyalLogo';
 import { LegalSecurityModal, LegalTab } from './components/LegalSecurityModal';
+import { OurClientsSection } from './components/OurClientsSection';
+import { FlagshipAppItem, OurAppsSection } from './components/OurAppsSection';
 import {
   loadProductsFromStorage,
   saveProductsToStorage,
@@ -57,6 +60,107 @@ const WEBSITE_URL = 'https://myfe.org';
 const OFFICE_ADDRESS =
   'Office Number 13, First Floor, State Life Building Number 7, G. Allana Road, Tower, Karachi, Pakistan.';
 
+type SitePage =
+  | 'home'
+  | 'our-apps'
+  | 'our-clients'
+  | 'ready-erps'
+  | 'capabilities'
+  | 'about'
+  | 'contact';
+
+interface SocialChannel {
+  id: 'facebook' | 'instagram' | 'linkedin' | 'youtube' | 'x';
+  name: string;
+  handle: string;
+  url: string;
+  tagline: string;
+  iconBgClass: string;
+  icon: React.ReactNode;
+}
+
+const SOCIAL_CHANNELS: SocialChannel[] = [
+  {
+    id: 'facebook',
+    name: 'Facebook Page',
+    handle: '@makeyourflyeasy',
+    url: 'https://www.facebook.com/makeyourflyeasy',
+    tagline: 'Product launches & live updates',
+    iconBgClass: 'bg-[#1877F2] text-white',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4" aria-hidden="true">
+        <path d="M13.5 22v-8.2h2.75l.41-3.2H13.5V8.55c0-.93.26-1.56 1.59-1.56h1.7V4.13c-.29-.04-1.3-.13-2.47-.13-2.45 0-4.12 1.49-4.12 4.24v2.36H7.44v3.2h2.76V22h3.3z" />
+      </svg>
+    ),
+  },
+  {
+    id: 'instagram',
+    name: 'Instagram',
+    handle: '@makeyourflyeasy',
+    url: 'https://www.instagram.com/makeyourflyeasy',
+    tagline: 'UI previews & software reels',
+    iconBgClass: 'bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF] text-white',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4" aria-hidden="true">
+        <path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2zm0 2A3.75 3.75 0 0 0 4 7.75v8.5A3.75 3.75 0 0 0 7.75 20h8.5A3.75 3.75 0 0 0 20 16.25v-8.5A3.75 3.75 0 0 0 16.25 4h-8.5zm9.5 1.5a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5zM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" />
+      </svg>
+    ),
+  },
+  {
+    id: 'linkedin',
+    name: 'LinkedIn',
+    handle: '@makeyourflyeasy',
+    url: 'https://www.linkedin.com/company/makeyourflyeasy',
+    tagline: 'Enterprise partnerships & news',
+    iconBgClass: 'bg-[#0A66C2] text-white',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4" aria-hidden="true">
+        <path d="M6.94 8.5H3.56V19.5h3.38V8.5zM5.25 3.5a1.96 1.96 0 1 0 0 3.92 1.96 1.96 0 0 0 0-3.92zM20.44 13.02c0-3.03-1.62-4.77-4.24-4.77-1.69 0-2.66.93-3.11 1.62V8.5H9.72c.04.95 0 11 0 11h3.37v-6.14c0-.33.02-.66.12-.9.26-.66.86-1.35 1.87-1.35 1.32 0 1.85 1 1.85 2.48V19.5h3.51v-6.48z" />
+      </svg>
+    ),
+  },
+  {
+    id: 'youtube',
+    name: 'YouTube',
+    handle: '@makeyourflyeasy',
+    url: 'https://www.youtube.com/@makeyourflyeasy',
+    tagline: 'Full walkthroughs & tutorials',
+    iconBgClass: 'bg-[#FF0000] text-white',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4" aria-hidden="true">
+        <path d="M21.58 7.19a2.75 2.75 0 0 0-1.94-1.95C17.93 4.78 12 4.78 12 4.78s-5.93 0-7.64.46A2.75 2.75 0 0 0 2.42 7.19 28.7 28.7 0 0 0 2 12a28.7 28.7 0 0 0 .42 4.81 2.75 2.75 0 0 0 1.94 1.95c1.71.46 7.64.46 7.64.46s5.93 0 7.64-.46a2.75 2.75 0 0 0 1.94-1.95A28.7 28.7 0 0 0 22 12a28.7 28.7 0 0 0-.42-4.81zM10 15V9l5.2 3-5.2 3z" />
+      </svg>
+    ),
+  },
+  {
+    id: 'x',
+    name: 'X (Twitter)',
+    handle: '@makeyourflyeasy',
+    url: 'https://x.com/makeyourflyeasy',
+    tagline: 'Tech insights & quick releases',
+    iconBgClass: 'bg-[#141129] text-white',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5" aria-hidden="true">
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+      </svg>
+    ),
+  },
+];
+
+function resolvePageFromUrl(): SitePage {
+  if (typeof window === 'undefined') return 'home';
+  const hash = window.location.hash.toLowerCase();
+  const pageParam = new URLSearchParams(window.location.search).get('page')?.toLowerCase();
+  const key = pageParam || hash.replace(/^#/, '');
+  if (key === 'our-apps' || key === 'apps') return 'our-apps';
+  if (key === 'our-clients' || key === 'clients') return 'our-clients';
+  if (key === 'ready-erps' || key === 'ready-softwares') return 'ready-erps';
+  if (key === 'capabilities' || key === 'what-we-build') return 'capabilities';
+  if (key === 'about' || key === 'about-skills') return 'about';
+  if (key === 'contact' || key === 'contact-us') return 'contact';
+  return 'home';
+}
+
 function openExternalSafely(url: string) {
   const link = document.createElement('a');
   link.href = url;
@@ -71,15 +175,7 @@ function buildWhatsAppUrl(text: string): string {
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
 }
 
-interface ReadySuiteGuide {
-  id: string;
-  suiteLabel: string;
-  title: string;
-  whatItDoes: string;
-  howItWorks: string;
-  benefits: string[];
-  icon: React.ReactNode;
-}
+type ReadySuiteGuide = FlagshipAppItem;
 
 const READY_SUITES: ReadySuiteGuide[] = [
   {
@@ -363,6 +459,7 @@ const ProductBannerArt: React.FC<{
 };
 
 export function App() {
+  const [activePage, setActivePage] = useState<SitePage>(() => resolvePageFromUrl());
   const [products, setProducts] = useState<StoreAppProduct[]>(() => loadProductsFromStorage());
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
@@ -373,29 +470,29 @@ export function App() {
   const [legalTab, setLegalTab] = useState<LegalTab | null>(null);
 
   useEffect(() => {
-    const syncPolicyFromUrl = () => {
+    const syncFromUrl = () => {
       const params = new URLSearchParams(window.location.search);
       const policyParam = params.get('policy');
       const hash = window.location.hash.toLowerCase();
       if (policyParam === 'privacy' || hash === '#privacy-policy') {
         setLegalTab('privacy');
-      } else if (policyParam === 'terms' || hash === '#terms-conditions') {
-        setLegalTab('terms');
-      } else if (policyParam === 'security' || hash === '#security-rules') {
-        setLegalTab('security');
+        return;
       }
+      if (policyParam === 'terms' || hash === '#terms-conditions') {
+        setLegalTab('terms');
+        return;
+      }
+      setActivePage(resolvePageFromUrl());
     };
-    syncPolicyFromUrl();
-    window.addEventListener('hashchange', syncPolicyFromUrl);
-    return () => window.removeEventListener('hashchange', syncPolicyFromUrl);
+    syncFromUrl();
+    window.addEventListener('hashchange', syncFromUrl);
+    return () => window.removeEventListener('hashchange', syncFromUrl);
   }, []);
 
   // Contact form state
   const [contactName, setContactName] = useState('');
   const [contactPhone, setContactPhone] = useState('');
-  const [contactInterest, setContactInterest] = useState(
-    'Pakistan Customs, Bonded Carrier & TIR ERP'
-  );
+  const [contactInterest, setContactInterest] = useState('');
   const [contactMessage, setContactMessage] = useState('');
   const [isSubmittingInquiry, setIsSubmittingInquiry] = useState(false);
   const [contactFeedback, setContactFeedback] = useState<{
@@ -485,13 +582,11 @@ export function App() {
     return () => window.removeEventListener('pointermove', handlePointerMove);
   }, []);
 
-  const navigateToSection = (sectionId: string) => {
+  const navigateToPage = (page: SitePage) => {
     setMobileMenuOpen(false);
-    window.history.replaceState(null, '', `#${sectionId}`);
-    window.setTimeout(() => {
-      const el = document.getElementById(sectionId);
-      el?.scrollIntoView({ behavior: 'smooth' });
-    }, 40);
+    setActivePage(page);
+    window.history.replaceState(null, '', `#${page}`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleCopyText = async (text: string, key: string, label: string) => {
@@ -512,7 +607,7 @@ export function App() {
     );
     setSpotlightProduct(null);
     setSpotlightSuite(null);
-    navigateToSection('contact');
+    navigateToPage('contact');
     showToast(`Prefilled inquiry form for "${capabilityTitle}".`, 'info');
   };
 
@@ -541,7 +636,8 @@ export function App() {
         message: contactMessage,
       });
 
-      const text = `Assalam-o-Alaikum Make Your Fly Easy!\nName: ${name}\nPhone: ${phone}\nInterest: ${contactInterest}\nBrief: ${
+      const resolvedInterest = contactInterest.trim() || 'General Software Inquiry';
+      const text = `Assalam-o-Alaikum Make Your Fly Easy!\nName: ${name}\nPhone: ${phone}\nInterest: ${resolvedInterest}\nBrief: ${
         contactMessage.trim() || 'Requesting live demo & proposal.'
       }`;
 
@@ -551,6 +647,7 @@ export function App() {
       });
       setContactName('');
       setContactPhone('');
+      setContactInterest('');
       setContactMessage('');
       openExternalSafely(buildWhatsAppUrl(text));
     } catch {
@@ -600,10 +697,10 @@ export function App() {
           {/* Left: Non-truncating Royal Logo + Wordmark */}
           <button
             type="button"
-            onClick={() => navigateToSection('home')}
+            onClick={() => navigateToPage('home')}
             className="group flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 xl:flex-initial text-left cursor-pointer"
           >
-            <RoyalLogo idSuffix="nav" className="h-8 sm:h-9 w-auto shrink-0" />
+            <RoyalLogo idSuffix="nav" className="h-12 sm:h-14 w-auto shrink-0" />
             <div className="min-w-0 h-8 sm:h-9 flex flex-col justify-between py-[1px]">
               <div className="font-display font-extrabold text-[15px] sm:text-[18px] leading-none tracking-tight text-royal-purple whitespace-nowrap">
                 MAKE YOUR FLY EASY
@@ -614,253 +711,369 @@ export function App() {
             </div>
           </button>
 
-          {/* Center Nav Links */}
-          <nav className="hidden lg:flex items-center gap-6 text-[13px] font-semibold text-[#3B3561]">
+          {/* Center Nav Links — Home, Our Apps, Our Clients, Capabilities, About, Contact Us */}
+          <nav className="hidden lg:flex items-center gap-4 xl:gap-6 text-[13px] xl:text-[13.5px] font-semibold text-[#3B3561]">
             <button
               type="button"
-              onClick={() => navigateToSection('home')}
-              className="text-violet-700 font-bold transition-colors whitespace-nowrap cursor-pointer"
+              onClick={() => navigateToPage('home')}
+              className={`pb-0.5 transition-colors whitespace-nowrap cursor-pointer border-b-2 ${
+                activePage === 'home'
+                  ? 'text-violet-700 font-bold border-violet-600'
+                  : 'border-transparent hover:text-violet-700'
+              }`}
             >
               Home
             </button>
             <button
               type="button"
-              onClick={() => navigateToSection('ready-softwares')}
-              className="hover:text-violet-700 transition-colors whitespace-nowrap cursor-pointer"
+              onClick={() => navigateToPage('our-apps')}
+              className={`pb-0.5 transition-colors whitespace-nowrap cursor-pointer border-b-2 ${
+                activePage === 'our-apps'
+                  ? 'text-violet-700 font-bold border-violet-600'
+                  : 'border-transparent hover:text-violet-700'
+              }`}
             >
-              Ready ERPs
+              Our Apps
             </button>
             <button
               type="button"
-              onClick={() => navigateToSection('what-we-build')}
-              className="hover:text-violet-700 transition-colors whitespace-nowrap cursor-pointer"
+              onClick={() => navigateToPage('our-clients')}
+              className={`pb-0.5 transition-colors whitespace-nowrap cursor-pointer border-b-2 ${
+                activePage === 'our-clients'
+                  ? 'text-violet-700 font-bold border-violet-600'
+                  : 'border-transparent hover:text-violet-700'
+              }`}
+            >
+              Our Clients
+            </button>
+            <button
+              type="button"
+              onClick={() => navigateToPage('capabilities')}
+              className={`pb-0.5 transition-colors whitespace-nowrap cursor-pointer border-b-2 ${
+                activePage === 'capabilities'
+                  ? 'text-violet-700 font-bold border-violet-600'
+                  : 'border-transparent hover:text-violet-700'
+              }`}
             >
               Capabilities
             </button>
             <button
               type="button"
-              onClick={() => navigateToSection('about-skills')}
-              className="hover:text-violet-700 transition-colors whitespace-nowrap cursor-pointer"
+              onClick={() => navigateToPage('about')}
+              className={`pb-0.5 transition-colors whitespace-nowrap cursor-pointer border-b-2 ${
+                activePage === 'about'
+                  ? 'text-violet-700 font-bold border-violet-600'
+                  : 'border-transparent hover:text-violet-700'
+              }`}
             >
               About
             </button>
             <button
               type="button"
-              onClick={() => navigateToSection('contact')}
-              className="hover:text-violet-700 transition-colors whitespace-nowrap cursor-pointer"
+              onClick={() => navigateToPage('contact')}
+              className={`pb-0.5 transition-colors whitespace-nowrap cursor-pointer border-b-2 ${
+                activePage === 'contact'
+                  ? 'text-violet-700 font-bold border-violet-600'
+                  : 'border-transparent hover:text-violet-700'
+              }`}
             >
-              Contact
+              Contact Us
             </button>
           </nav>
 
-          {/* Right Clean Website Action Buttons */}
+          {/* Right Clean Action: Ready ERPs Only (WhatsApp moved to bottom-right green button) */}
           <div className="hidden md:flex items-center gap-2.5 shrink-0">
             <button
               type="button"
-              onClick={() => navigateToSection('ready-softwares')}
-              className="btn-standard-glass rounded-xl px-3.5 py-2 text-xs"
+              onClick={() => navigateToPage('ready-erps')}
+              className={`${
+                activePage === 'ready-erps' ? 'btn-standard-primary' : 'btn-standard-glass'
+              } rounded-xl px-4 py-2 text-xs`}
             >
-              <Layers className="w-3.5 h-3.5 text-violet-700" />
+              <Layers
+                className={`w-3.5 h-3.5 ${
+                  activePage === 'ready-erps' ? 'text-white' : 'text-violet-700'
+                }`}
+              />
               Ready ERPs
             </button>
-            <a
-              href={buildWhatsAppUrl(
-                'Assalam-o-Alaikum Make Your Fly Easy, I would like a live consultation.'
-              )}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-standard-primary rounded-xl px-3.5 py-2 text-xs"
-            >
-              <MessageCircle className="w-3.5 h-3.5" />
-              WhatsApp
-            </a>
           </div>
 
-          {/* Mobile Menu Toggle */}
+          {/* Mobile / Tablet Menu Toggle */}
           <button
             type="button"
             onClick={() => setMobileMenuOpen((v) => !v)}
             aria-label="Toggle Menu"
-            className="md:hidden btn-standard-glass rounded-xl p-2 shrink-0"
+            className="lg:hidden btn-standard-glass rounded-xl p-2 shrink-0"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
 
-        {/* Mobile Dropdown Glass Drawer */}
+        {/* Mobile / Tablet Dropdown Glass Drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-violet-200/60 bg-white/92 backdrop-blur-2xl px-4 py-4 space-y-3">
+          <div className="lg:hidden border-t border-violet-200/60 bg-white/92 backdrop-blur-2xl px-4 py-4 space-y-2.5">
             <div className="grid grid-cols-2 gap-2 text-xs font-semibold text-[#2E2759]">
               <button
                 type="button"
-                onClick={() => navigateToSection('home')}
-                className="glass-inner-tile rounded-xl px-3 py-2.5 flex items-center justify-between text-left"
+                onClick={() => navigateToPage('home')}
+                className={`glass-inner-tile rounded-xl px-3 py-2.5 flex items-center justify-between text-left ${
+                  activePage === 'home' ? 'font-bold text-violet-800 border-violet-400' : ''
+                }`}
               >
                 Home
                 <ChevronRight className="w-3.5 h-3.5 text-violet-600" />
               </button>
               <button
                 type="button"
-                onClick={() => navigateToSection('ready-softwares')}
-                className="glass-inner-tile rounded-xl px-3 py-2.5 flex items-center justify-between text-left font-bold text-violet-800"
+                onClick={() => navigateToPage('our-apps')}
+                className={`glass-inner-tile rounded-xl px-3 py-2.5 flex items-center justify-between text-left ${
+                  activePage === 'our-apps' ? 'font-bold text-violet-800 border-violet-400' : ''
+                }`}
               >
-                Ready ERPs
-                <ChevronRight className="w-3.5 h-3.5 text-violet-700" />
+                Our Apps
+                <ChevronRight className="w-3.5 h-3.5 text-violet-600" />
               </button>
               <button
                 type="button"
-                onClick={() => navigateToSection('what-we-build')}
-                className="glass-inner-tile rounded-xl px-3 py-2.5 flex items-center justify-between text-left"
+                onClick={() => navigateToPage('our-clients')}
+                className={`glass-inner-tile rounded-xl px-3 py-2.5 flex items-center justify-between text-left ${
+                  activePage === 'our-clients' ? 'font-bold text-violet-800 border-violet-400' : ''
+                }`}
+              >
+                Our Clients
+                <ChevronRight className="w-3.5 h-3.5 text-violet-600" />
+              </button>
+              <button
+                type="button"
+                onClick={() => navigateToPage('capabilities')}
+                className={`glass-inner-tile rounded-xl px-3 py-2.5 flex items-center justify-between text-left ${
+                  activePage === 'capabilities' ? 'font-bold text-violet-800 border-violet-400' : ''
+                }`}
               >
                 Capabilities
                 <ChevronRight className="w-3.5 h-3.5 text-violet-600" />
               </button>
               <button
                 type="button"
-                onClick={() => navigateToSection('about-skills')}
-                className="glass-inner-tile rounded-xl px-3 py-2.5 flex items-center justify-between text-left"
+                onClick={() => navigateToPage('about')}
+                className={`glass-inner-tile rounded-xl px-3 py-2.5 flex items-center justify-between text-left ${
+                  activePage === 'about' ? 'font-bold text-violet-800 border-violet-400' : ''
+                }`}
               >
-                About Us
+                About
                 <ChevronRight className="w-3.5 h-3.5 text-violet-600" />
               </button>
               <button
                 type="button"
-                onClick={() => navigateToSection('contact')}
-                className="col-span-2 glass-inner-tile rounded-xl px-3 py-2.5 flex items-center justify-between text-left"
+                onClick={() => navigateToPage('contact')}
+                className={`glass-inner-tile rounded-xl px-3 py-2.5 flex items-center justify-between text-left ${
+                  activePage === 'contact' ? 'font-bold text-violet-800 border-violet-400' : ''
+                }`}
               >
-                Contact Karachi HQ
+                Contact Us
                 <ChevronRight className="w-3.5 h-3.5 text-violet-600" />
               </button>
+              <button
+                type="button"
+                onClick={() => navigateToPage('ready-erps')}
+                className="col-span-2 btn-standard-primary rounded-xl px-3.5 py-2.5 text-xs justify-between"
+              >
+                <span className="flex items-center gap-2">
+                  <Layers className="w-3.5 h-3.5" />
+                  Ready ERPs
+                </span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
             </div>
-
-            <a
-              href={buildWhatsAppUrl(
-                'Assalam-o-Alaikum Make Your Fly Easy, I want to book a software demo.'
-              )}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-standard-primary rounded-xl px-4 py-2.5 text-xs w-full"
-            >
-              <MessageCircle className="w-4 h-4" />
-              WhatsApp Consultation
-            </a>
           </div>
         )}
       </header>
 
-      <main className="relative z-10">
-        {/* HERO SECTION — LARGE LOGO ON TOP, COMPANY NAME, AND FULL INTRODUCTION */}
-        <section id="home" className="mx-auto max-w-5xl px-4 sm:px-6 pt-10 sm:pt-16 pb-12 sm:pb-16">
-          <div className="glass-surface rounded-[2rem] px-6 py-10 sm:px-12 sm:py-14 text-center flex flex-col items-center">
-            {/* Top Centered Large Official Logo */}
-            <RoyalLogo
-              idSuffix="hero"
-              className="h-24 sm:h-28 md:h-32 w-auto drop-shadow-[0_12px_28px_rgba(109,40,217,0.22)]"
-            />
+      <main className="relative z-10 min-h-[70vh]">
+        {/* PAGE 1: HOME — CLEAN EXECUTIVE INTRODUCTION ONLY */}
+        {activePage === 'home' && (
+          <section
+            id="home"
+            className="mx-auto max-w-5xl px-4 sm:px-6 pt-10 sm:pt-16 pb-14 sm:pb-20"
+          >
+            <div className="glass-surface rounded-[2rem] px-6 py-10 sm:px-14 sm:py-16 text-center flex flex-col items-center">
+              {/* Top Centered Large Official Logo */}
+              <RoyalLogo
+                idSuffix="hero"
+                className="h-32 sm:h-40 md:h-44 w-auto drop-shadow-[0_12px_28px_rgba(109,40,217,0.22)]"
+              />
 
-            {/* Company Name & Tagline Directly Below Logo */}
-            <div className="mt-5 space-y-2">
-              <h1 className="font-display font-extrabold text-3xl sm:text-5xl tracking-tight text-royal-purple leading-none">
-                MAKE YOUR FLY EASY
-              </h1>
-              <p className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.22em] text-violet-700">
-                Complete Digital &amp; AI Business Studio · Karachi HQ
-              </p>
-            </div>
+              {/* Company Name & Tagline Directly Below Logo */}
+              <div className="mt-5 space-y-2">
+                <h1 className="font-display font-extrabold text-3xl sm:text-5xl tracking-tight text-royal-purple leading-none">
+                  MAKE YOUR FLY EASY
+                </h1>
+                <p className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.22em] text-violet-700">
+                  Enterprise Software House &amp; Digital Studio · Karachi HQ
+                </p>
+              </div>
 
-            <div className="w-24 h-1 rounded-full bg-gradient-to-r from-violet-400 via-purple-600 to-violet-400 my-6 opacity-75" />
+              <div className="w-24 h-1 rounded-full bg-gradient-to-r from-violet-400 via-purple-600 to-violet-400 my-6 opacity-75" />
 
-            {/* Full Company Introduction Below Company Name */}
-            <div className="max-w-3xl space-y-4">
-              <h2 className="text-xl sm:text-3xl font-extrabold text-[#141129] leading-snug">
-                Everything Your Business Needs Digitally —{' '}
-                <span className="text-royal-purple">Built Under One Roof</span>
-              </h2>
+              {/* Full Company Introduction Below Company Name */}
+              <div className="max-w-3xl space-y-4">
+                <h2 className="text-xl sm:text-3xl font-extrabold text-[#141129] leading-snug">
+                  Everything Your Business Needs Digitally —{' '}
+                  <span className="text-royal-purple">Engineered Under One Roof</span>
+                </h2>
 
-              <p className="body-fluid-copy text-[#47416A]">
-                Make Your Fly Easy is a Karachi-based software and digital solutions studio that
-                handles every kind of business automation—from ready-to-use industry systems for{' '}
-                <strong className="text-[#1E1B4B]">
-                  Pakistan Customs Clearing Agents, Bonded Carriers, TIR &amp; Afghan Transit Trade
-                  (ATT), Advocates &amp; Law Chambers,
-                </strong>{' '}
-                and <strong className="text-[#1E1B4B]">Universal Business Finance</strong> to
-                complete custom websites, mobile-friendly apps, and online stores.
-              </p>
+                <p className="body-fluid-copy text-[#47416A]">
+                  Make Your Fly Easy is a Karachi-based software house and digital automation studio
+                  delivering end-to-end technology solutions—from ready-to-deploy industry platforms
+                  for{' '}
+                  <strong className="text-[#1E1B4B]">
+                    Pakistan Customs Clearing Agents, Bonded Carriers, TIR &amp; Afghan Transit
+                    Trade (ATT), Advocates &amp; Law Chambers,
+                  </strong>{' '}
+                  and <strong className="text-[#1E1B4B]">Universal Business Finance</strong> to
+                  high-scale websites, mobile-friendly apps, and online marketplaces.
+                </p>
 
-              <p className="body-fluid-copy text-[#47416A]">
-                Whatever digital tool your business imagines—interactive web portals, multi-vendor
-                marketplaces, delivery &amp; fleet tracking apps, 24/7 Urdu &amp; English customer
-                assistants, smart receipt &amp; document readers, voice-to-notes workflows, custom
-                reports, or marketing copy &amp; brand visuals—Make Your Fly Easy builds and
-                delivers it fast, tailored around how your team works.
-              </p>
-            </div>
+                <p className="body-fluid-copy text-[#47416A]">
+                  Whatever digital system your company envisions—interactive corporate portals,
+                  on-demand delivery &amp; fleet tracking software, 24/7 Urdu &amp; English smart
+                  customer assistants, document &amp; receipt readers, voice-to-notes workflows,
+                  executive reporting, or brand creative tools—we design, build, and launch it with
+                  enterprise precision.
+                </p>
+              </div>
 
-            {/* Clean Primary & Glass Action Buttons */}
-            <div className="flex flex-wrap items-center justify-center gap-3 pt-7">
-              <button
-                type="button"
-                onClick={() => navigateToSection('ready-softwares')}
-                className="btn-standard-primary rounded-xl px-6 py-3 text-sm"
-              >
-                <Layers className="w-4 h-4" />
-                Explore Ready ERPs
-              </button>
-              <button
-                type="button"
-                onClick={() => navigateToSection('what-we-build')}
-                className="btn-standard-glass rounded-xl px-6 py-3 text-sm"
-              >
-                <Sparkles className="w-4 h-4 text-violet-700" />
-                What We Can Build
-              </button>
-              <a
-                href={buildWhatsAppUrl(
-                  'Assalam-o-Alaikum Make Your Fly Easy, I would like a live consultation & software demo.'
-                )}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-standard-glass rounded-xl px-6 py-3 text-sm"
-              >
-                <MessageCircle className="w-4 h-4 text-violet-700" />
-                WhatsApp
-              </a>
-            </div>
+              {/* Clean Page Navigation Action Buttons */}
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-8">
+                <button
+                  type="button"
+                  onClick={() => navigateToPage('ready-erps')}
+                  className="btn-standard-primary rounded-xl px-6 py-3 text-sm"
+                >
+                  <Layers className="w-4 h-4" />
+                  Explore Ready ERPs
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigateToPage('capabilities')}
+                  className="btn-standard-glass rounded-xl px-6 py-3 text-sm"
+                >
+                  <Sparkles className="w-4 h-4 text-violet-700" />
+                  View Capabilities
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigateToPage('contact')}
+                  className="btn-standard-soft rounded-xl px-6 py-3 text-sm"
+                >
+                  Contact Us
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
 
-            {/* Clean 4-Metric Proof Strip */}
-            <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-3 pt-8">
-              {[
-                { label: 'Ready Flagship ERPs', val: '3 Suites' },
-                { label: 'Custom Solutions', val: '12+ Categories' },
-                { label: 'Delivery Speed', val: 'Fast Launch' },
-                { label: 'Direct Desk', val: '24/7 Support' },
-              ].map((stat) => (
-                <div key={stat.label} className="glass-inner-tile rounded-2xl px-3.5 py-3.5">
-                  <div className="font-display text-base sm:text-lg font-extrabold text-royal-purple tabular-nums">
-                    {stat.val}
+              {/* Clean 4-Metric Proof Strip */}
+              <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-3 pt-9">
+                {[
+                  { label: 'Ready Flagship ERPs', val: '3 Suites' },
+                  { label: 'Custom Solutions', val: '12+ Categories' },
+                  { label: 'Delivery Speed', val: 'Fast Launch' },
+                  { label: 'Direct Desk', val: '24/7 Support' },
+                ].map((stat) => (
+                  <div key={stat.label} className="glass-inner-tile rounded-2xl px-3.5 py-3.5">
+                    <div className="font-display text-base sm:text-lg font-extrabold text-royal-purple tabular-nums">
+                      {stat.val}
+                    </div>
+                    <div className="text-[11px] font-medium text-[#5B5480] mt-0.5">
+                      {stat.label}
+                    </div>
                   </div>
-                  <div className="text-[11px] font-medium text-[#5B5480] mt-0.5">{stat.label}</div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
-            {/* SECTION 2: 100% READY-TO-DEPLOY BUSINESS SOFTWARES */}
-            <section id="ready-softwares" className="mx-auto max-w-7xl px-4 sm:px-6 py-12 sm:py-16">
-              <div className="max-w-2xl mb-8">
+        {/* PAGE: OUR APPS (DEDICATED SEPARATE PAGE FOR EVENTZAAR & COUNSEL OS) */}
+        {activePage === 'our-apps' && (
+          <section
+            id="our-apps"
+            className="mx-auto max-w-6xl px-4 sm:px-6 pt-8 sm:pt-12 pb-16 sm:pb-20 space-y-6"
+          >
+            <div>
+              <button
+                type="button"
+                onClick={() => navigateToPage('home')}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-violet-700 hover:underline cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                Back to Home
+              </button>
+            </div>
+            <OurAppsSection
+              id="our-apps-catalog"
+              onInspectApp={(app) => setSpotlightSuite(app)}
+              onBookDemo={(title) => handleRequestCustomBuild(title)}
+            />
+          </section>
+        )}
+
+        {/* PAGE: OUR CLIENTS (DEDICATED SEPARATE PAGE) */}
+        {activePage === 'our-clients' && (
+          <section
+            id="our-clients"
+            className="mx-auto max-w-6xl px-4 sm:px-6 pt-8 sm:pt-12 pb-16 sm:pb-20 space-y-6"
+          >
+            <div>
+              <button
+                type="button"
+                onClick={() => navigateToPage('home')}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-violet-700 hover:underline cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                Back to Home
+              </button>
+            </div>
+            <OurClientsSection id="our-clients-list" />
+          </section>
+        )}
+
+        {/* PAGE 2: READY ERPs PAGE */}
+        {activePage === 'ready-erps' && (
+          <section
+            id="ready-erps"
+            className="mx-auto max-w-7xl px-4 sm:px-6 pt-8 sm:pt-12 pb-16 sm:pb-20"
+          >
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+              <div className="max-w-2xl">
+                <button
+                  type="button"
+                  onClick={() => navigateToPage('home')}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-violet-700 hover:underline mb-2 cursor-pointer"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  Back to Home
+                </button>
                 <p className="text-xs font-bold uppercase tracking-[0.14em] text-violet-700">
                   Ready Business Solutions
                 </p>
-                <h2 className="section-fluid-heading font-extrabold text-[#141129] mt-1.5">
-                  What Our Ready Softwares Do &amp; How They Help You
-                </h2>
+                <h1 className="section-fluid-heading font-extrabold text-[#141129] mt-1">
+                  What Our Ready ERPs Do &amp; How They Help You
+                </h1>
                 <p className="body-fluid-copy text-[#47416A] mt-2">
                   Each software is built around real daily office work—clear to operate, fast for
                   staff, and focused on saving time while protecting every rupee of profit.
                 </p>
               </div>
+              <button
+                type="button"
+                onClick={() => navigateToPage('contact')}
+                className="btn-standard-glass rounded-xl px-4 py-2.5 text-xs"
+              >
+                Schedule a Live Demo
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {READY_SUITES.map((suite) => (
@@ -921,47 +1134,54 @@ export function App() {
                       >
                         See How It Helps
                       </button>
-                      <a
-                        href={buildWhatsAppUrl(
-                          `Hello Make Your Fly Easy, I want a live walkthrough of ${suite.title}.`
-                        )}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        type="button"
+                        onClick={() => handleRequestCustomBuild(suite.title)}
                         className="btn-standard-glass rounded-xl px-3.5 py-2.5 text-xs"
                       >
-                        WhatsApp
-                      </a>
+                        Book Demo
+                      </button>
                     </div>
                   </article>
                 ))}
               </div>
             </section>
+        )}
 
-            {/* SECTION 3: CUSTOM BUSINESS SOFTWARES WE BUILD */}
-            <section id="what-we-build" className="mx-auto max-w-7xl px-4 sm:px-6 py-12 sm:py-16">
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-                <div className="max-w-2xl">
-                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-violet-700">
-                    All-In-One Custom Solutions
-                  </p>
-                  <h2 className="section-fluid-heading font-extrabold text-[#141129] mt-1.5">
-                    Everything Make Your Fly Easy Can Build For You
-                  </h2>
-                  <p className="body-fluid-copy text-[#47416A] mt-2">
-                    From websites, online stores, and office dashboards to smart chatbots,
-                    document readers, voice tools, and creative content—see what each solution
-                    does, how it works, and how it helps your business grow.
-                  </p>
-                </div>
+        {/* PAGE 3: CAPABILITIES PAGE */}
+        {activePage === 'capabilities' && (
+          <section id="capabilities" className="mx-auto max-w-7xl px-4 sm:px-6 pt-8 sm:pt-12 pb-16 sm:pb-20">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+              <div className="max-w-2xl">
                 <button
                   type="button"
-                  onClick={() => navigateToSection('contact')}
-                  className="btn-standard-glass rounded-xl px-4 py-2.5 text-xs"
+                  onClick={() => navigateToPage('home')}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-violet-700 hover:underline mb-2 cursor-pointer"
                 >
-                  Discuss Your Requirement
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  Back to Home
                 </button>
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-violet-700">
+                  All-In-One Custom Solutions
+                </p>
+                <h1 className="section-fluid-heading font-extrabold text-[#141129] mt-1">
+                  Everything Make Your Fly Easy Can Build For You
+                </h1>
+                <p className="body-fluid-copy text-[#47416A] mt-2">
+                  From websites, online stores, and office dashboards to smart chatbots,
+                  document readers, voice tools, and creative content—see what each solution
+                  does, how it works, and how it helps your business grow.
+                </p>
               </div>
+              <button
+                type="button"
+                onClick={() => navigateToPage('contact')}
+                className="btn-standard-primary rounded-xl px-4 py-2.5 text-xs"
+              >
+                Discuss Your Requirement
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
                 {BUILD_CAPABILITIES.map((cap) => (
@@ -1025,21 +1245,33 @@ export function App() {
                 ))}
               </div>
             </section>
+        )}
 
-            {/* SECTION 4: WHY BUSINESSES CHOOSE US & HOW WE DELIVER */}
-            <section id="about-skills" className="mx-auto max-w-7xl px-4 sm:px-6 py-12 sm:py-16">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* PAGE 4: ABOUT PAGE (DELIVERY ARCHITECTURE + GOVERNANCE & POLICIES) */}
+        {activePage === 'about' && (
+          <section id="about" className="mx-auto max-w-7xl px-4 sm:px-6 pt-8 sm:pt-12 pb-16 sm:pb-20 space-y-12">
+            <div>
+              <button
+                type="button"
+                onClick={() => navigateToPage('home')}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-violet-700 hover:underline mb-2 cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                Back to Home
+              </button>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mt-1">
                 <div className="lg:col-span-5 glass-surface rounded-3xl p-6 sm:p-7">
                   <p className="text-xs font-bold uppercase tracking-[0.14em] text-violet-700">
-                    Why Businesses Choose Us
+                    About Make Your Fly Easy
                   </p>
-                  <h2 className="section-fluid-heading font-extrabold text-[#141129] mt-1.5">
+                  <h1 className="section-fluid-heading font-extrabold text-[#141129] mt-1.5">
                     Built Around Real Office Workflows, Not Complicated Menus
-                  </h2>
+                  </h1>
                   <p className="body-fluid-copy text-[#47416A] mt-3">
-                    Our goal is simple: give business owners and staff clean software that anyone
-                    can learn quickly—saving hours of paperwork, preventing billing leakage, and
-                    keeping complete accounts visible anytime.
+                    Make Your Fly Easy is a Karachi-based enterprise software house engineered to
+                    give business owners and staff clean systems anyone can learn quickly—saving
+                    hours of paperwork, preventing billing leakage, and keeping complete accounts
+                    visible anytime.
                   </p>
 
                   <div className="mt-5 grid grid-cols-2 gap-3">
@@ -1105,11 +1337,87 @@ export function App() {
                   ))}
                 </div>
               </div>
-            </section>
+            </div>
 
-            {/* SECTION 5: EXECUTIVE CONTACT & VALIDATED INQUIRY FORM */}
-            <section id="contact" className="mx-auto max-w-7xl px-4 sm:px-6 pt-8 pb-16 sm:pb-20">
-              <div className="glass-surface rounded-3xl p-6 sm:p-10">
+            {/* GOVERNANCE, PRIVACY POLICY & TERMS & CONDITIONS */}
+            <div id="legal-policies">
+              <div className="max-w-2xl mb-6">
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-violet-700">
+                  Clear Terms &amp; Client Protection
+                </p>
+                <h2 className="section-fluid-heading font-extrabold text-[#141129] mt-1.5">
+                  Privacy Policy &amp; Terms &amp; Conditions
+                </h2>
+                <p className="body-fluid-copy text-[#47416A] mt-2">
+                  Clear terms protecting both our clients and Make Your Fly Easy—including built-in
+                  client backup tools and transparent responsibility boundaries.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <article className="glass-surface rounded-3xl p-6 flex flex-col justify-between">
+                  <div className="space-y-3">
+                    <div className="w-10 h-10 rounded-xl bg-violet-100/80 border border-violet-200 flex items-center justify-center">
+                      <Lock className="w-5 h-5 text-violet-700" />
+                    </div>
+                    <h3 className="text-base font-extrabold text-[#141129]">Privacy Policy</h3>
+                    <p className="text-xs leading-relaxed text-[#47416A]">
+                      Explains what details we collect, zero data selling, client data ownership,
+                      built-in software backup responsibility, and safeguards against hacking,
+                      staff leaks, theft, or government-directed restrictions.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setLegalTab('privacy')}
+                    className="btn-standard-soft rounded-xl px-4 py-2.5 text-xs w-full mt-5"
+                  >
+                    Read Privacy Policy
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </article>
+
+                <article className="glass-surface rounded-3xl p-6 flex flex-col justify-between">
+                  <div className="space-y-3">
+                    <div className="w-10 h-10 rounded-xl bg-violet-100/80 border border-violet-200 flex items-center justify-center">
+                      <Scale className="w-5 h-5 text-violet-700" />
+                    </div>
+                    <h3 className="text-base font-extrabold text-[#141129]">
+                      Terms &amp; Conditions
+                    </h3>
+                    <p className="text-xs leading-relaxed text-[#47416A]">
+                      Covers service scope, mandatory client backups using the in-software backup
+                      tool (zero MYFE data-loss liability), and no liability for government bans,
+                      hacking, cyber attacks, hardware theft, or employee misuse.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setLegalTab('terms')}
+                    className="btn-standard-soft rounded-xl px-4 py-2.5 text-xs w-full mt-5"
+                  >
+                    Read Terms &amp; Conditions
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </article>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* PAGE 5: CONTACT US PAGE (DIRECT HQ DESK + INQUIRY FORM + ALL SOCIAL MEDIA @makeyourflyeasy) */}
+        {activePage === 'contact' && (
+          <section id="contact" className="mx-auto max-w-7xl px-4 sm:px-6 pt-8 sm:pt-12 pb-16 sm:pb-20 space-y-8">
+            <div>
+              <button
+                type="button"
+                onClick={() => navigateToPage('home')}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-violet-700 hover:underline mb-2 cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                Back to Home
+              </button>
+              <div className="glass-surface rounded-3xl p-6 sm:p-10 mt-1">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                   {/* Left Direct Details */}
                   <div className="lg:col-span-5 space-y-5">
@@ -1117,12 +1425,12 @@ export function App() {
                       <p className="text-xs font-bold uppercase tracking-[0.14em] text-violet-700">
                         Karachi Head Office
                       </p>
-                      <h2 className="section-fluid-heading font-extrabold text-[#141129] mt-1.5">
-                        Start Your Software Deployment Today
-                      </h2>
+                      <h1 className="section-fluid-heading font-extrabold text-[#141129] mt-1.5">
+                        Contact Make Your Fly Easy
+                      </h1>
                       <p className="body-fluid-copy text-[#47416A] mt-2">
                         Visit our Tower Karachi engineering office or connect directly on Mobile,
-                        WhatsApp, or Landline for an immediate live demonstration.
+                        WhatsApp, Landline, or social channels for an immediate live demonstration.
                       </p>
                     </div>
 
@@ -1233,25 +1541,14 @@ export function App() {
                           <Mail className="w-5 h-5 text-violet-700 shrink-0" />
                           <div className="min-w-0">
                             <div className="text-xs font-bold text-[#141129]">
-                              Official Email &amp; Web
+                              Official Email Address
                             </div>
-                            <div className="flex flex-wrap items-center gap-2">
-                              <a
-                                href={`mailto:${EMAIL_ADDRESS}`}
-                                className="text-xs sm:text-sm font-bold text-violet-800 truncate"
-                              >
-                                {EMAIL_ADDRESS}
-                              </a>
-                              <span className="text-violet-300">·</span>
-                              <a
-                                href={WEBSITE_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs sm:text-sm font-bold text-violet-800 hover:underline"
-                              >
-                                {WEBSITE_DISPLAY}
-                              </a>
-                            </div>
+                            <a
+                              href={`mailto:${EMAIL_ADDRESS}`}
+                              className="text-sm font-extrabold text-royal-purple truncate block hover:underline"
+                            >
+                              {EMAIL_ADDRESS}
+                            </a>
                           </div>
                         </div>
                         <button
@@ -1265,6 +1562,37 @@ export function App() {
                             <Copy className="w-3.5 h-3.5" />
                           )}
                           {copiedKey === 'email' ? 'Copied' : 'Copy'}
+                        </button>
+                      </div>
+
+                      <div className="glass-inner-tile rounded-2xl p-4 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <Globe className="w-5 h-5 text-violet-700 shrink-0" />
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold text-[#141129]">
+                              Official Website
+                            </div>
+                            <a
+                              href={WEBSITE_URL}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm font-extrabold text-royal-purple truncate block hover:underline"
+                            >
+                              {WEBSITE_DISPLAY}
+                            </a>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyText(WEBSITE_URL, 'website', 'Website URL')}
+                          className="btn-standard-soft rounded-xl px-3 py-2 text-xs shrink-0"
+                        >
+                          {copiedKey === 'website' ? (
+                            <Check className="w-3.5 h-3.5" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
+                          {copiedKey === 'website' ? 'Copied' : 'Copy'}
                         </button>
                       </div>
                     </div>
@@ -1313,6 +1641,7 @@ export function App() {
                         value={contactInterest}
                         onChange={(e) => setContactInterest(e.target.value)}
                         maxLength={INQUIRY_LIMITS.INTEREST_MAX}
+                        placeholder="e.g. Custom ERP, Website, Mobile App, Eventzaar, Counsel OS..."
                         className="w-full rounded-xl bg-white/90 border border-violet-200 px-3.5 py-2.5 text-sm text-[#141129] focus:outline-none focus:border-violet-600 focus:ring-2 focus:ring-violet-500/20"
                       />
                     </div>
@@ -1385,198 +1714,178 @@ export function App() {
                       >
                         Terms &amp; Conditions
                       </button>
-                      . Protected by strict write-only{' '}
-                      <button
-                        type="button"
-                        onClick={() => setLegalTab('security')}
-                        className="font-bold text-violet-700 hover:underline cursor-pointer"
-                      >
-                        Firebase Security Rules
-                      </button>
                       .
                     </p>
                   </form>
                 </div>
               </div>
-            </section>
+            </div>
 
-            {/* SECTION 6: PRIVACY POLICY, TERMS & CONDITIONS & FIREBASE SECURITY RULES */}
-            <section id="legal-policies" className="mx-auto max-w-7xl px-4 sm:px-6 pb-16 sm:pb-20">
-              <div className="max-w-2xl mb-6">
-                <p className="text-xs font-bold uppercase tracking-[0.14em] text-violet-700">
-                  Transparency, Legal Protection &amp; Cloud Security
-                </p>
-                <h2 className="section-fluid-heading font-extrabold text-[#141129] mt-1.5">
-                  Privacy Policy, Terms &amp; Firebase Security Rules
-                </h2>
-                <p className="body-fluid-copy text-[#47416A] mt-2">
-                  Clear terms protecting both our clients and Make Your Fly Easy—including built-in
-                  client backup tools, responsibility boundaries, and strict cloud database rules.
-                </p>
+            {/* OFFICIAL SOCIAL MEDIA CHANNELS (@makeyourflyeasy) INSIDE CONTACT US */}
+            <div className="glass-surface rounded-3xl p-6 sm:p-8">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-6">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-violet-700">
+                    Official Social Media · @makeyourflyeasy
+                  </p>
+                  <h2 className="text-xl sm:text-2xl font-extrabold text-[#141129] mt-1">
+                    Connect &amp; Follow Us Everywhere
+                  </h2>
+                </div>
+                <span className="inline-flex items-center gap-1.5 rounded-xl bg-violet-100/80 border border-violet-200 px-3 py-1.5 text-xs font-extrabold text-violet-800">
+                  Official Handle: @makeyourflyeasy
+                </span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <article className="glass-surface rounded-3xl p-6 flex flex-col justify-between">
-                  <div className="space-y-3">
-                    <div className="w-10 h-10 rounded-xl bg-violet-100/80 border border-violet-200 flex items-center justify-center">
-                      <Lock className="w-5 h-5 text-violet-700" />
-                    </div>
-                    <h3 className="text-base font-extrabold text-[#141129]">Privacy Policy</h3>
-                    <p className="text-xs leading-relaxed text-[#47416A]">
-                      Explains what details we collect, zero data selling, client data ownership,
-                      built-in software backup responsibility, and safeguards against hacking,
-                      staff leaks, theft, or government-directed restrictions.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setLegalTab('privacy')}
-                    className="btn-standard-soft rounded-xl px-4 py-2.5 text-xs w-full mt-5"
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+                {SOCIAL_CHANNELS.map((social) => (
+                  <a
+                    key={social.id}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="glass-inner-tile rounded-2xl p-4 flex flex-col justify-between gap-3 group hover:-translate-y-0.5 transition-transform"
                   >
-                    Read Privacy Policy
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </article>
-
-                <article className="glass-surface rounded-3xl p-6 flex flex-col justify-between">
-                  <div className="space-y-3">
-                    <div className="w-10 h-10 rounded-xl bg-violet-100/80 border border-violet-200 flex items-center justify-center">
-                      <Scale className="w-5 h-5 text-violet-700" />
+                    <div className="flex items-center justify-between gap-2">
+                      <span
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center shadow-sm ${social.iconBgClass}`}
+                      >
+                        {social.icon}
+                      </span>
+                      <ExternalLink className="w-3.5 h-3.5 text-violet-600 opacity-60 group-hover:opacity-100 transition-opacity" />
                     </div>
-                    <h3 className="text-base font-extrabold text-[#141129]">
-                      Terms &amp; Conditions
-                    </h3>
-                    <p className="text-xs leading-relaxed text-[#47416A]">
-                      Covers service scope, mandatory client backups using the in-software backup
-                      tool (zero MYFE data-loss liability), and no liability for government bans,
-                      hacking, cyber attacks, hardware theft, or employee misuse.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setLegalTab('terms')}
-                    className="btn-standard-soft rounded-xl px-4 py-2.5 text-xs w-full mt-5"
-                  >
-                    Read Terms &amp; Conditions
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </article>
-
-                <article className="glass-surface rounded-3xl p-6 flex flex-col justify-between">
-                  <div className="space-y-3">
-                    <div className="w-10 h-10 rounded-xl bg-violet-100/80 border border-violet-200 flex items-center justify-center">
-                      <ShieldCheck className="w-5 h-5 text-violet-700" />
+                    <div>
+                      <div className="text-sm font-extrabold text-[#141129]">{social.name}</div>
+                      <div className="text-xs font-bold text-violet-700 mt-0.5">{social.handle}</div>
+                      <div className="text-[11px] text-[#5B5480] mt-1">{social.tagline}</div>
                     </div>
-                    <h3 className="text-base font-extrabold text-[#141129]">
-                      Firebase Security Rules
-                    </h3>
-                    <p className="text-xs leading-relaxed text-[#47416A]">
-                      Zero-Trust Firestore rules featuring global default-deny, strict write-only
-                      PII isolation on inquiries, server timestamp validation, field allowlists, and
-                      tamper-proof read-only catalog enforcement.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setLegalTab('security')}
-                    className="btn-standard-soft rounded-xl px-4 py-2.5 text-xs w-full mt-5"
-                  >
-                    Inspect Security Rules
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </article>
+                  </a>
+                ))}
               </div>
-            </section>
+            </div>
+          </section>
+        )}
       </main>
 
-      {/* QUIET LUXURY FOOTER */}
-      <footer className="relative z-10 border-t border-violet-200/60 bg-white/65 backdrop-blur-2xl">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-          <div className="flex items-center gap-3">
-            <RoyalLogo idSuffix="footer" className="h-10 sm:h-11 w-auto shrink-0" />
-            <div className="min-h-10 sm:min-h-11 flex flex-col justify-between py-[1px]">
-              <div className="font-display font-extrabold text-base sm:text-lg leading-none text-royal-purple">
-                MAKE YOUR FLY EASY
+      {/* EXECUTIVE MULTI-PAGE CORPORATE FOOTER */}
+      <footer className="relative z-10 border-t border-violet-200/60 bg-white/75 backdrop-blur-2xl">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 space-y-6">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+            <div className="flex items-center gap-3">
+              <RoyalLogo idSuffix="footer" className="h-14 sm:h-16 w-auto shrink-0" />
+              <div className="min-h-10 sm:min-h-11 flex flex-col justify-between py-[1px]">
+                <div className="font-display font-extrabold text-base sm:text-lg leading-none text-royal-purple">
+                  MAKE YOUR FLY EASY
+                </div>
+                <p className="text-xs text-[#5B5480] leading-snug mt-1 max-w-md">{OFFICE_ADDRESS}</p>
               </div>
-              <p className="text-xs text-[#5B5480] leading-snug mt-1">{OFFICE_ADDRESS}</p>
+            </div>
+
+            {/* Social Channels Quick Bar */}
+            <div className="flex flex-wrap items-center gap-2">
+              {SOCIAL_CHANNELS.map((social) => (
+                <a
+                  key={social.id}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${social.name} ${social.handle}`}
+                  title={`${social.name} (${social.handle})`}
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center shadow-sm transition-transform hover:-translate-y-0.5 ${social.iconBgClass}`}
+                >
+                  {social.icon}
+                </a>
+              ))}
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold text-[#47416A]">
-            <button
-              type="button"
-              onClick={() => navigateToSection('ready-softwares')}
-              className="hover:text-violet-700 cursor-pointer"
-            >
-              Ready ERPs
-            </button>
-            <button
-              type="button"
-              onClick={() => navigateToSection('what-we-build')}
-              className="hover:text-violet-700 cursor-pointer"
-            >
-              Capabilities
-            </button>
-            <button
-              type="button"
-              onClick={() => navigateToSection('about-skills')}
-              className="hover:text-violet-700 cursor-pointer"
-            >
-              About
-            </button>
-            <button
-              type="button"
-              onClick={() => navigateToSection('contact')}
-              className="hover:text-violet-700 cursor-pointer"
-            >
-              Contact
-            </button>
-            <a href={`tel:${DIRECT_MOBILE_TEL}`} className="hover:text-violet-700 tabular-nums">
-              {DIRECT_MOBILE_DISPLAY}
-            </a>
-            <a
-              href={buildWhatsAppUrl('Assalam-o-Alaikum Make Your Fly Easy!')}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-violet-700 tabular-nums"
-            >
-              WhatsApp: {WHATSAPP_DISPLAY}
-            </a>
-            <a href={`mailto:${EMAIL_ADDRESS}`} className="hover:text-violet-700">
-              {EMAIL_ADDRESS}
-            </a>
-            <a
-              href={WEBSITE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-violet-700"
-            >
-              {WEBSITE_DISPLAY}
-            </a>
-            <button
-              type="button"
-              onClick={() => setLegalTab('privacy')}
-              className="hover:text-violet-700 cursor-pointer"
-            >
-              Privacy Policy
-            </button>
-            <button
-              type="button"
-              onClick={() => setLegalTab('terms')}
-              className="hover:text-violet-700 cursor-pointer"
-            >
-              Terms &amp; Conditions
-            </button>
-            <button
-              type="button"
-              onClick={() => setLegalTab('security')}
-              className="hover:text-violet-700 cursor-pointer"
-            >
-              Firebase Security Rules
-            </button>
-            <span className="text-[#7B749E]">
-              © {new Date().getFullYear()} Make Your Fly Easy
-            </span>
+          <div className="pt-5 border-t border-violet-200/60 flex flex-wrap items-center justify-between gap-4 text-xs font-semibold text-[#47416A]">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <button
+                type="button"
+                onClick={() => navigateToPage('home')}
+                className="hover:text-violet-700 cursor-pointer"
+              >
+                Home
+              </button>
+              <button
+                type="button"
+                onClick={() => navigateToPage('our-apps')}
+                className="hover:text-violet-700 cursor-pointer"
+              >
+                Our Apps
+              </button>
+              <button
+                type="button"
+                onClick={() => navigateToPage('our-clients')}
+                className="hover:text-violet-700 cursor-pointer"
+              >
+                Our Clients
+              </button>
+              <button
+                type="button"
+                onClick={() => navigateToPage('ready-erps')}
+                className="hover:text-violet-700 cursor-pointer"
+              >
+                Ready ERPs
+              </button>
+              <button
+                type="button"
+                onClick={() => navigateToPage('capabilities')}
+                className="hover:text-violet-700 cursor-pointer"
+              >
+                Capabilities
+              </button>
+              <button
+                type="button"
+                onClick={() => navigateToPage('about')}
+                className="hover:text-violet-700 cursor-pointer"
+              >
+                About
+              </button>
+              <button
+                type="button"
+                onClick={() => navigateToPage('contact')}
+                className="hover:text-violet-700 cursor-pointer"
+              >
+                Contact Us
+              </button>
+              <span className="text-violet-300">|</span>
+              <button
+                type="button"
+                onClick={() => setLegalTab('privacy')}
+                className="hover:text-violet-700 cursor-pointer"
+              >
+                Privacy Policy
+              </button>
+              <button
+                type="button"
+                onClick={() => setLegalTab('terms')}
+                className="hover:text-violet-700 cursor-pointer"
+              >
+                Terms &amp; Conditions
+              </button>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              <a href={`tel:${DIRECT_MOBILE_TEL}`} className="hover:text-violet-700 tabular-nums">
+                {DIRECT_MOBILE_DISPLAY}
+              </a>
+              <a href={`mailto:${EMAIL_ADDRESS}`} className="hover:text-violet-700">
+                {EMAIL_ADDRESS}
+              </a>
+              <a
+                href={WEBSITE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-violet-700"
+              >
+                {WEBSITE_DISPLAY}
+              </a>
+              <span className="text-[#7B749E]">
+                © {new Date().getFullYear()} Make Your Fly Easy
+              </span>
+            </div>
           </div>
         </div>
       </footer>
@@ -1605,6 +1914,21 @@ export function App() {
                   <h3 className="text-lg sm:text-xl font-extrabold text-[#141129] mt-1">
                     {spotlightSuite ? spotlightSuite.title : spotlightProduct?.title}
                   </h3>
+                  {spotlightSuite?.subtitle && (
+                    <p className="text-xs font-semibold text-[#3B3561] mt-1">
+                      {spotlightSuite.subtitle}
+                    </p>
+                  )}
+                  {spotlightSuite?.platforms && (
+                    <p className="text-[11px] font-medium text-[#5B5480] mt-1">
+                      {spotlightSuite.platforms}
+                    </p>
+                  )}
+                  {spotlightSuite?.releaseNote && (
+                    <p className="text-[11px] font-bold text-violet-800 mt-1">
+                      {spotlightSuite.releaseNote}
+                    </p>
+                  )}
                 </div>
                 <button
                   type="button"
@@ -1638,6 +1962,17 @@ export function App() {
                     </p>
                   </div>
 
+                  {spotlightSuite.highlights && spotlightSuite.highlights.length > 0 && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {spotlightSuite.highlights.map((item) => (
+                        <div key={item.title} className="glass-inner-tile rounded-2xl p-3.5 space-y-1">
+                          <div className="text-xs font-extrabold text-[#141129]">{item.title}</div>
+                          <p className="text-[11.5px] leading-relaxed text-[#47416A]">{item.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   <div className="glass-inner-tile rounded-2xl p-4 space-y-2">
                     <div className="text-[11px] font-extrabold uppercase tracking-wider text-violet-700">
                       Key Business Benefits
@@ -1669,6 +2004,18 @@ export function App() {
               )}
 
               <div className="flex flex-wrap gap-2.5 pt-2">
+                {spotlightSuite?.websiteUrl && spotlightSuite?.websiteLabel && (
+                  <a
+                    href={spotlightSuite.websiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-standard-soft rounded-xl px-4 py-2.5 text-xs"
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    Visit {spotlightSuite.websiteLabel}
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                )}
                 <a
                   href={buildWhatsAppUrl(
                     `Assalam-o-Alaikum Make Your Fly Easy, I want a live demo of ${
@@ -1700,23 +2047,23 @@ export function App() {
         </div>
       )}
 
-      {/* PRIVACY POLICY, TERMS & CONDITIONS & FIREBASE SECURITY RULES MODAL */}
+      {/* PRIVACY POLICY & TERMS & CONDITIONS MODAL */}
       <LegalSecurityModal
         activeTab={legalTab}
         onSelectTab={(tab) => setLegalTab(tab)}
         onClose={() => setLegalTab(null)}
       />
 
-      {/* FLOATING BOTTOM-RIGHT WHATSAPP BUTTON (ICON ONLY — NO NUMBER) */}
+      {/* FLOATING BOTTOM-RIGHT WHATSAPP BUTTON (CLASSIC GREEN ICON ONLY — NO NUMBER) */}
       <a
         href={buildWhatsAppUrl(
-          'Assalam-o-Alaikum Make Your Fly Easy, I would like to connect regarding your enterprise software solutions.'
+          'Assalam-o-Alaikum Make Your Fly Easy, I would like to connect regarding your software solutions.'
         )}
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Chat on WhatsApp"
         title="Chat on WhatsApp"
-        className="fixed bottom-5 right-5 z-40 btn-standard-primary w-14 h-14 rounded-2xl shadow-[0_14px_34px_-6px_rgba(109,40,217,0.55)]"
+        className="fixed bottom-5 right-5 z-40 w-14 h-14 rounded-full bg-[#25D366] hover:bg-[#1EBE5D] text-white shadow-[0_12px_30px_-4px_rgba(37,211,102,0.58)] ring-4 ring-white/90 flex items-center justify-center transition-all duration-200 hover:-translate-y-1 hover:scale-105 active:scale-95"
       >
         <svg
           viewBox="0 0 24 24"

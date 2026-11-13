@@ -1,18 +1,7 @@
-import React, { useState } from 'react';
-import {
-  AlertTriangle,
-  ChevronDown,
-  ChevronUp,
-  Database,
-  FileText,
-  Lock,
-  Scale,
-  Shield,
-  ShieldCheck,
-  X,
-} from 'lucide-react';
+import React from 'react';
+import { AlertTriangle, Database, Lock, Scale, X } from 'lucide-react';
 
-export type LegalTab = 'privacy' | 'terms' | 'security';
+export type LegalTab = 'privacy' | 'terms';
 
 interface LegalSecurityModalProps {
   activeTab: LegalTab | null;
@@ -20,74 +9,11 @@ interface LegalSecurityModalProps {
   onClose: () => void;
 }
 
-const ACTIVE_FIRESTORE_RULES_SNIPPET = `rules_version = '2';
-
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Pillar 0: Global Safety Net (Default-Deny Catch-All)
-    match /{document=**} {
-      allow read, write: if false;
-    }
-
-    function isValidId(id) {
-      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\\\-]+$');
-    }
-
-    function incoming() {
-      return request.resource.data;
-    }
-
-    function isValidInquiry(data) {
-      return data.keys().hasAll(['name', 'phone', 'interest', 'message', 'status', 'createdAt']) &&
-        data.keys().hasOnly(['name', 'phone', 'interest', 'message', 'status', 'createdAt']) &&
-        data.name is string && data.name.trim().size() >= 2 && data.name.size() <= 100 &&
-        data.phone is string && data.phone.size() >= 7 && data.phone.size() <= 30 &&
-        data.phone.matches('^[0-9+\\\\-\\\\s()]{7,30}$') &&
-        data.phone.matches('^([+\\\\-\\\\s()]*[0-9]){7,}[+\\\\-\\\\s()0-9]*$') &&
-        data.interest is string && data.interest.trim().size() >= 2 && data.interest.size() <= 160 &&
-        data.message is string && data.message.size() <= 1000 &&
-        data.status is string && data.status.size() <= 20 && data.status == 'new' &&
-        data.createdAt is timestamp && data.createdAt == request.time;
-    }
-
-    function isValidDownloadEvent(data) {
-      return data.keys().hasAll(['productId', 'productTitle', 'version', 'platform', 'createdAt']) &&
-        data.keys().hasOnly(['productId', 'productTitle', 'version', 'platform', 'createdAt']) &&
-        isValidId(data.productId) &&
-        data.productTitle is string && data.productTitle.trim().size() >= 2 && data.productTitle.size() <= 160 &&
-        data.version is string && data.version.trim().size() >= 1 && data.version.size() <= 32 &&
-        data.platform is string && data.platform.trim().size() >= 2 && data.platform.size() <= 100 &&
-        data.createdAt is timestamp && data.createdAt == request.time;
-    }
-
-    // Read-Only Public Software Catalog
-    match /software_catalog/{productId} {
-      allow get: if isValidId(productId) && resource != null && resource.data.isPublic is bool && resource.data.isPublic == true;
-      allow list: if resource.data.isPublic is bool && resource.data.isPublic == true;
-      allow create, update, delete: if false;
-    }
-
-    // Write-Only Contact Inquiry Inbox (Strict PII Isolation)
-    match /inquiries/{inquiryId} {
-      allow get, list, update, delete: if false;
-      allow create: if isValidId(inquiryId) && isValidInquiry(incoming());
-    }
-
-    // Write-Only Telemetry Stream (No PII)
-    match /download_events/{eventId} {
-      allow get, list, update, delete: if false;
-      allow create: if isValidId(eventId) && isValidDownloadEvent(incoming());
-    }
-  }
-}`;
-
 export const LegalSecurityModal: React.FC<LegalSecurityModalProps> = ({
   activeTab,
   onSelectTab,
   onClose,
 }) => {
-  const [showRawRules, setShowRawRules] = useState(false);
-
   if (!activeTab) return null;
 
   return (
@@ -95,7 +21,7 @@ export const LegalSecurityModal: React.FC<LegalSecurityModalProps> = ({
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-[#1E1B4B]/45 backdrop-blur-md"
       role="dialog"
       aria-modal="true"
-      aria-label="Legal Policies and Security Rules"
+      aria-label="Privacy Policy and Terms & Conditions"
     >
       <div className="glass-surface glass-modal-card w-full max-w-4xl rounded-3xl bg-white/95 overflow-hidden max-h-[90vh] flex flex-col">
         {/* Top Modal Header */}
@@ -105,9 +31,9 @@ export const LegalSecurityModal: React.FC<LegalSecurityModalProps> = ({
               Make Your Fly Easy · Legal &amp; Protection Center
             </span>
             <h3 className="text-lg sm:text-2xl font-extrabold text-[#141129] mt-1">
-              {activeTab === 'privacy' && 'Privacy Policy & Data Protection'}
-              {activeTab === 'terms' && 'Terms & Conditions of Service'}
-              {activeTab === 'security' && 'Firebase Security Rules & Zero-Trust Guard'}
+              {activeTab === 'privacy'
+                ? 'Privacy Policy & Data Protection'
+                : 'Terms & Conditions of Service'}
             </h3>
             <p className="text-xs text-[#5B5480] mt-0.5">
               Effective Date: November 2026 · Applicable across myfe.org &amp; all MYFE Softwares
@@ -123,7 +49,7 @@ export const LegalSecurityModal: React.FC<LegalSecurityModalProps> = ({
           </button>
         </div>
 
-        {/* 3-Tab Navigation */}
+        {/* 2-Tab Navigation */}
         <div className="px-5 sm:px-7 py-3 border-b border-violet-200/60 bg-white/80 flex flex-wrap gap-2">
           <button
             type="button"
@@ -148,18 +74,6 @@ export const LegalSecurityModal: React.FC<LegalSecurityModalProps> = ({
           >
             <Scale className="w-3.5 h-3.5" />
             Terms &amp; Conditions
-          </button>
-          <button
-            type="button"
-            onClick={() => onSelectTab('security')}
-            className={`rounded-xl px-3.5 py-2 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-              activeTab === 'security'
-                ? 'btn-standard-primary'
-                : 'btn-standard-glass text-[#2E2759]'
-            }`}
-          >
-            <ShieldCheck className="w-3.5 h-3.5" />
-            Firebase Security Rules
           </button>
         </div>
 
@@ -219,8 +133,8 @@ export const LegalSecurityModal: React.FC<LegalSecurityModalProps> = ({
                   4. Hacking, Theft, Staff Misuse &amp; Government Directives Disclaimer
                 </h4>
                 <p>
-                  While MYFE secures our public website inbox with encrypted transport and strict
-                  write-only Firebase database rules, no public internet connection or client-side
+                  While MYFE protects our public inquiry inbox with encrypted transport and strict
+                  write-only server access controls, no public internet connection or client-side
                   computer is 100% immune from external threats.{' '}
                   <strong>Make Your Fly Easy is NOT liable for:</strong>
                 </p>
@@ -250,9 +164,9 @@ export const LegalSecurityModal: React.FC<LegalSecurityModalProps> = ({
                   5. Inquiry Storage, Deletion Requests &amp; Privacy Desk
                 </h4>
                 <p>
-                  Website consultation submissions are stored in a write-only database inbox that
-                  cannot be browsed or read publicly. You may request review, correction, or removal
-                  of your submitted inquiry details anytime by contacting our Karachi Head Office at{' '}
+                  Website consultation submissions are stored securely and cannot be browsed or read
+                  publicly. You may request review, correction, or removal of your submitted inquiry
+                  details anytime by contacting our Karachi Head Office at{' '}
                   <strong>info@myfe.org</strong>, WhatsApp <strong>+92-339-8884124</strong>, Direct
                   Mobile <strong>+93-321-9222883</strong>, or Landline <strong>021-36601055</strong>.
                 </p>
@@ -376,105 +290,6 @@ export const LegalSecurityModal: React.FC<LegalSecurityModalProps> = ({
                   business operations or unlawful use. Governed by the laws of Pakistan under the
                   exclusive jurisdiction of courts in Karachi, Sindh.
                 </p>
-              </div>
-            </>
-          )}
-
-          {activeTab === 'security' && (
-            <>
-              <div className="glass-inner-tile rounded-2xl p-4 sm:p-5 space-y-2">
-                <h4 className="text-sm sm:text-base font-extrabold text-[#141129] flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-violet-700 shrink-0" />
-                  Zero-Trust Firebase &amp; Cloud Firestore Security Rules
-                </h4>
-                <p>
-                  Our platform enforces strict, server-side Zero-Trust security rules directly on
-                  Google Cloud Firestore. Every database request is verified at the database gate
-                  before any read or write can occur—ensuring complete protection even if someone
-                  bypasses the website interface.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div className="glass-inner-tile rounded-2xl p-4 space-y-1.5">
-                  <div className="text-[11px] font-extrabold uppercase tracking-wider text-violet-700">
-                    Rule 01 · Global Safety Net
-                  </div>
-                  <h5 className="font-bold text-[#141129]">Default-Deny Catch-All</h5>
-                  <p className="text-xs text-[#47416A]">
-                    Every unlisted collection or document path (including internal paths such as{' '}
-                    <code className="font-mono text-violet-800">/users</code>,{' '}
-                    <code className="font-mono text-violet-800">/admins</code>, or unknown paths)
-                    is unconditionally blocked for both reading and writing.
-                  </p>
-                </div>
-
-                <div className="glass-inner-tile rounded-2xl p-4 space-y-1.5">
-                  <div className="text-[11px] font-extrabold uppercase tracking-wider text-violet-700">
-                    Rule 02 · PII Protection
-                  </div>
-                  <h5 className="font-bold text-[#141129]">Write-Only Inquiries Inbox</h5>
-                  <p className="text-xs text-[#47416A]">
-                    Public <code className="font-mono text-violet-800">get</code>,{' '}
-                    <code className="font-mono text-violet-800">list</code>,{' '}
-                    <code className="font-mono text-violet-800">update</code>, and{' '}
-                    <code className="font-mono text-violet-800">delete</code> on{' '}
-                    <code className="font-mono text-violet-800">/inquiries</code> are strictly{' '}
-                    <strong>false</strong>. Only strictly schema-checked new inquiries can be
-                    submitted.
-                  </p>
-                </div>
-
-                <div className="glass-inner-tile rounded-2xl p-4 space-y-1.5">
-                  <div className="text-[11px] font-extrabold uppercase tracking-wider text-violet-700">
-                    Rule 03 · Field &amp; Timestamp Integrity
-                  </div>
-                  <h5 className="font-bold text-[#141129]">No Ghost Fields or Spoofing</h5>
-                  <p className="text-xs text-[#47416A]">
-                    Every write validates exact allowed keys (
-                    <code className="font-mono text-violet-800">hasAll</code> +{' '}
-                    <code className="font-mono text-violet-800">hasOnly</code>), non-whitespace
-                    name/interest limits, 7+ digit phone validation, locked initial status (
-                    <code className="font-mono text-violet-800">&apos;new&apos;</code>), and
-                    server timestamp (<code className="font-mono text-violet-800">request.time</code>
-                    ).
-                  </p>
-                </div>
-
-                <div className="glass-inner-tile rounded-2xl p-4 space-y-1.5">
-                  <div className="text-[11px] font-extrabold uppercase tracking-wider text-violet-700">
-                    Rule 04 · Tamper-Proof Catalog
-                  </div>
-                  <h5 className="font-bold text-[#141129]">Read-Only Public Catalog</h5>
-                  <p className="text-xs text-[#47416A]">
-                    <code className="font-mono text-violet-800">/software_catalog</code> permits
-                    reads only where <code className="font-mono text-violet-800">isPublic == true</code>{' '}
-                    and rejects all client-side creates, edits, or deletions.
-                  </p>
-                </div>
-              </div>
-
-              <div className="glass-inner-tile rounded-2xl p-4 space-y-2">
-                <button
-                  type="button"
-                  onClick={() => setShowRawRules((v) => !v)}
-                  className="w-full flex items-center justify-between text-left text-xs sm:text-sm font-bold text-violet-900 cursor-pointer"
-                >
-                  <span className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-violet-700" />
-                    Inspect Active Firestore Security Rules Policy (Read-Only Reference)
-                  </span>
-                  {showRawRules ? (
-                    <ChevronUp className="w-4 h-4 text-violet-700" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-violet-700" />
-                  )}
-                </button>
-                {showRawRules && (
-                  <pre className="mt-2 rounded-xl bg-[#141129] text-violet-100 p-4 text-[11px] leading-relaxed overflow-x-auto font-mono">
-                    {ACTIVE_FIRESTORE_RULES_SNIPPET}
-                  </pre>
-                )}
               </div>
             </>
           )}
