@@ -1,0 +1,383 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    color-scheme: light only;
+    --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  html,
+  body {
+    color-scheme: light only;
+    font-family: var(--font-sans);
+    background: #F8F7FC;
+    color: #141129;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.025em;
+  }
+
+  code, pre, .font-mono {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Luminous Pearl White & Lavender Atmospheric Canvas */
+.pearl-purple-canvas {
+  background:
+    radial-gradient(ellipse 80% 50% at 12% 0%, rgba(167, 139, 250, 0.16) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 45% at 88% 8%, rgba(192, 132, 252, 0.14) 0%, transparent 58%),
+    radial-gradient(ellipse 60% 50% at 50% 45%, rgba(255, 255, 255, 0.95) 0%, rgba(248, 247, 252, 0.9) 100%),
+    linear-gradient(180deg, #FFFFFF 0%, #F7F5FD 48%, #F2EFFB 100%);
+}
+
+/* Soft Animated Ambient Glass Refraction Orbs */
+@keyframes float-orb {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(24px, -18px, 0) scale(1.06);
+  }
+}
+
+.ambient-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  pointer-events: none;
+  animation: float-orb 16s ease-in-out infinite;
+  will-change: transform;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Balanced Executive Typography Scale */
+.hero-fluid-heading {
+  font-size: clamp(1.75rem, 3.8vw, 3.25rem);
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.section-fluid-heading {
+  font-size: clamp(1.35rem, 2.5vw, 2.15rem);
+  line-height: 1.18;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.card-fluid-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.32;
+}
+
+@media (min-width: 768px) {
+  .card-fluid-title {
+    font-size: 1.2rem;
+  }
+}
+
+.body-fluid-copy {
+  font-size: 0.88rem;
+  line-height: 1.65;
+}
+
+@media (min-width: 768px) {
+  .body-fluid-copy {
+    font-size: 0.98rem;
+  }
+}
+
+/* Royal Purple & Pearl Gradient Typography */
+.text-royal-purple {
+  background: linear-gradient(135deg, #2E1065 0%, #6D28D9 48%, #9333EA 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.text-amethyst-gradient {
+  background: linear-gradient(135deg, #5B21B6 0%, #7C3AED 55%, #A855F7 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Subtle Architectural Pearl Grid */
+.bg-pearl-grid {
+  background-size: 48px 48px;
+  background-image:
+    linear-gradient(to right, rgba(109, 40, 217, 0.032) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(109, 40, 217, 0.032) 1px, transparent 1px);
+}
+
+/* Full Glassmorphic Surface (Pearl White + Soft Amethyst Refraction) */
+.glass-surface {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.78) 0%,
+    rgba(250, 248, 255, 0.64) 100%
+  );
+  backdrop-filter: blur(24px) saturate(185%);
+  -webkit-backdrop-filter: blur(24px) saturate(185%);
+  border: 1px solid rgba(139, 92, 246, 0.16);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.96),
+    inset 0 -1px 0 0 rgba(139, 92, 246, 0.06),
+    0 14px 36px -8px rgba(46, 16, 101, 0.07);
+  transition:
+    transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-surface:hover {
+  border-color: rgba(124, 58, 237, 0.36);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 1),
+    0 20px 44px -10px rgba(109, 40, 217, 0.14);
+}
+
+.glass-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    460px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(139, 92, 246, 0.11),
+    rgba(192, 132, 252, 0.05) 45%,
+    transparent 75%
+  );
+  opacity: 0;
+  transition: opacity 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.glass-surface:hover::before {
+  opacity: 1;
+}
+
+.glass-surface > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Lighter Inner Frosted Glass Tile */
+.glass-inner-tile {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid rgba(139, 92, 246, 0.14);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.92);
+  transition:
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-inner-tile:hover {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(124, 58, 237, 0.32);
+}
+
+/* Standard Animated Shimmer Sweep */
+@keyframes specular-sweep {
+  0% {
+    transform: translateX(-140%) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(260%) skewX(-20deg);
+  }
+}
+
+/* STANDARD ANIMATED BUTTON 1: Royal Amethyst Purple Primary */
+.btn-standard-primary {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #6D28D9 0%, #7C3AED 55%, #5B21B6 100%);
+  color: #FFFFFF;
+  font-weight: 700;
+  border: 1px solid rgba(167, 139, 250, 0.55);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.35),
+    0 10px 24px -6px rgba(109, 40, 217, 0.42);
+  transition:
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.btn-standard-primary::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 45%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.32),
+    transparent
+  );
+  animation: specular-sweep 3.8s infinite;
+  pointer-events: none;
+}
+
+.btn-standard-primary:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.06);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.45),
+    0 14px 30px -6px rgba(109, 40, 217, 0.55);
+}
+
+.btn-standard-primary:active {
+  transform: scale(0.97);
+}
+
+/* STANDARD ANIMATED BUTTON 2: Luminous Pearl Frosted Glass */
+.btn-standard-glass {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  color: #1E1B4B;
+  font-weight: 700;
+  border: 1px solid rgba(124, 58, 237, 0.24);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.98),
+    0 8px 20px -6px rgba(46, 16, 101, 0.1);
+  transition:
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.btn-standard-glass::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 45%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(139, 92, 246, 0.14),
+    transparent
+  );
+  animation: specular-sweep 4.4s infinite;
+  pointer-events: none;
+}
+
+.btn-standard-glass:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(124, 58, 237, 0.52);
+  box-shadow:
+    inset 0 1px 0 0 #FFFFFF,
+    0 12px 26px -6px rgba(109, 40, 217, 0.2);
+}
+
+.btn-standard-glass:active {
+  transform: scale(0.97);
+}
+
+/* STANDARD ANIMATED BUTTON 3: Soft Lavender Pearl Tint */
+.btn-standard-soft {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: rgba(243, 238, 255, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: #5B21B6;
+  font-weight: 700;
+  border: 1px solid rgba(139, 92, 246, 0.26);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+  transition:
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.btn-standard-soft:hover {
+  transform: translateY(-2px);
+  background: rgba(237, 233, 254, 0.98);
+  border-color: rgba(124, 58, 237, 0.5);
+  box-shadow: 0 10px 22px -6px rgba(109, 40, 217, 0.18);
+}
+
+.btn-standard-soft:active {
+  transform: scale(0.97);
+}
+
+/* Smooth Glass Modal Backdrop & Entrance */
+@keyframes modal-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.glass-modal-card {
+  animation: modal-rise 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-orb,
+  .btn-standard-primary::after,
+  .btn-standard-glass::after,
+  .glass-modal-card {
+    animation: none;
+  }
+  .glass-surface,
+  .glass-inner-tile,
+  .btn-standard-primary,
+  .btn-standard-glass,
+  .btn-standard-soft {
+    transition: none;
+  }
+}

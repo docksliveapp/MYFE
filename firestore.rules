@@ -1,0 +1,62 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pillar 0: Global Safety Net (Default-Deny Catch-All)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Reusable Hardened Global Helpers
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    // Pillar 2 & 3: Strict Schema Blueprints (Zero Update Gaps / No Shadow Fields)
+    function isValidInquiry(data) {
+      return data.keys().hasAll(['name', 'phone', 'interest', 'message', 'status', 'createdAt']) &&
+        data.keys().hasOnly(['name', 'phone', 'interest', 'message', 'status', 'createdAt']) &&
+        data.name is string && data.name.trim().size() >= 2 && data.name.size() <= 100 &&
+        data.phone is string && data.phone.size() >= 7 && data.phone.size() <= 30 &&
+        data.phone.matches('^[0-9+\\-\\s()]{7,30}$') &&
+        data.phone.matches('^([+\\-\\s()]*[0-9]){7,}[+\\-\\s()0-9]*$') &&
+        data.interest is string && data.interest.trim().size() >= 2 && data.interest.size() <= 160 &&
+        data.message is string && data.message.size() <= 1000 &&
+        data.status is string && data.status.size() <= 20 && data.status == 'new' &&
+        data.createdAt is timestamp && data.createdAt == request.time;
+    }
+
+    function isValidDownloadEvent(data) {
+      return data.keys().hasAll(['productId', 'productTitle', 'version', 'platform', 'createdAt']) &&
+        data.keys().hasOnly(['productId', 'productTitle', 'version', 'platform', 'createdAt']) &&
+        isValidId(data.productId) &&
+        data.productTitle is string && data.productTitle.trim().size() >= 2 && data.productTitle.size() <= 160 &&
+        data.version is string && data.version.trim().size() >= 1 && data.version.size() <= 32 &&
+        data.platform is string && data.platform.trim().size() >= 2 && data.platform.size() <= 100 &&
+        data.createdAt is timestamp && data.createdAt == request.time;
+    }
+
+    // Public Read-Only Software Catalog (No client-side writes)
+    match /software_catalog/{productId} {
+      allow get: if isValidId(productId) && resource != null && resource.data.isPublic is bool && resource.data.isPublic == true;
+      allow list: if resource.data.isPublic is bool && resource.data.isPublic == true;
+      allow create, update, delete: if false;
+    }
+
+    // Write-Only Contact & Project Inquiry Inbox (Strict PII Isolation)
+    match /inquiries/{inquiryId} {
+      allow get, list, update, delete: if false;
+      allow create: if isValidId(inquiryId) && isValidInquiry(incoming());
+    }
+
+    // Write-Only Telemetry Stream (No PII)
+    match /download_events/{eventId} {
+      allow get, list, update, delete: if false;
+      allow create: if isValidId(eventId) && isValidDownloadEvent(incoming());
+    }
+  }
+}

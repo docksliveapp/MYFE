@@ -1,0 +1,199 @@
+{
+  "entities": {
+    "SoftwareProduct": {
+      "title": "SoftwareProduct",
+      "description": "Publicly listed enterprise software and trial download metadata.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique product identifier slug.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "description": "Display title of the software product.",
+          "minLength": 2,
+          "maxLength": 160
+        },
+        "category": {
+          "type": "string",
+          "description": "Product solution category.",
+          "enum": [
+            "Customs & Logistics ERPs",
+            "Advocates Legal Suite",
+            "Business Finance",
+            "Android / Mobile Apps (APK)",
+            "E-Commerce & Delivery Apps",
+            "AI Tools & Web Apps"
+          ],
+          "maxLength": 60
+        },
+        "version": {
+          "type": "string",
+          "description": "Release version string.",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "platform": {
+          "type": "string",
+          "description": "Supported platforms.",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "fileSize": {
+          "type": "string",
+          "description": "Package size label.",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "downloadsCount": {
+          "type": "number",
+          "description": "Baseline trial download counter."
+        },
+        "description": {
+          "type": "string",
+          "description": "Product overview text.",
+          "maxLength": 1200
+        },
+        "demoCredentials": {
+          "type": "string",
+          "description": "Trial sandbox login credentials.",
+          "maxLength": 240
+        },
+        "trialDuration": {
+          "type": "string",
+          "description": "Trial evaluation window label.",
+          "maxLength": 80
+        },
+        "installInstructions": {
+          "type": "string",
+          "description": "Step-by-step installation guidance.",
+          "maxLength": 1000
+        },
+        "badgeText": {
+          "type": "string",
+          "description": "Product tier label.",
+          "maxLength": 40
+        },
+        "publishedAt": {
+          "type": "string",
+          "description": "Release publish date label.",
+          "maxLength": 40
+        },
+        "isPublic": {
+          "type": "boolean",
+          "description": "Controls public visibility of the catalog item."
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "category",
+        "version",
+        "platform",
+        "fileSize",
+        "downloadsCount",
+        "description",
+        "isPublic"
+      ]
+    },
+    "Inquiry": {
+      "title": "Inquiry",
+      "description": "Project consultation and software demo inquiry submitted via the corporate website contact desk.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Full name of the prospective client.",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "phone": {
+          "type": "string",
+          "description": "WhatsApp or mobile contact number.",
+          "minLength": 7,
+          "maxLength": 30,
+          "pattern": "^[0-9+\\-\\s()]{7,30}$"
+        },
+        "interest": {
+          "type": "string",
+          "description": "Selected software suite or custom build topic.",
+          "minLength": 2,
+          "maxLength": 160
+        },
+        "message": {
+          "type": "string",
+          "description": "Project requirements and workflow summary.",
+          "maxLength": 1000
+        },
+        "status": {
+          "type": "string",
+          "description": "Initial server-validated intake status.",
+          "enum": ["new"],
+          "maxLength": 20
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server-validated Firestore submission timestamp."
+        }
+      },
+      "required": ["name", "phone", "interest", "message", "status", "createdAt"]
+    },
+    "DownloadEvent": {
+      "title": "DownloadEvent",
+      "description": "Append-only trial package download log record (contains no PII).",
+      "type": "object",
+      "properties": {
+        "productId": {
+          "type": "string",
+          "description": "Identifier of the downloaded software package.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "productTitle": {
+          "type": "string",
+          "description": "Title of the downloaded software package.",
+          "minLength": 2,
+          "maxLength": 160
+        },
+        "version": {
+          "type": "string",
+          "description": "Downloaded package version.",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "platform": {
+          "type": "string",
+          "description": "Target platform string.",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server-validated Firestore download event timestamp."
+        }
+      },
+      "required": ["productId", "productTitle", "version", "platform", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/software_catalog/{productId}": {
+      "schema": { "$ref": "#/entities/SoftwareProduct" },
+      "description": "Publicly readable read-only software trial catalog managed out-of-band."
+    },
+    "/inquiries/{inquiryId}": {
+      "schema": { "$ref": "#/entities/Inquiry" },
+      "description": "Write-only client inquiry inbox (contains PII; zero public read/list/update/delete)."
+    },
+    "/download_events/{eventId}": {
+      "schema": { "$ref": "#/entities/DownloadEvent" },
+      "description": "Write-only non-PII trial package download audit stream."
+    }
+  }
+}
