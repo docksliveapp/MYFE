@@ -150,21 +150,21 @@ export const OurAppsSection: React.FC<OurAppsSectionProps> = ({
         {OUR_APPS.map((app) => (
           <article
             key={app.id}
-            className="glass-surface rounded-3xl p-6 flex flex-col justify-between"
+            className="glass-surface rounded-3xl p-5 sm:p-6 flex flex-col justify-between hover:-translate-y-0.5 transition-transform duration-200"
           >
             <div className="space-y-4">
               <div className="flex items-center justify-between gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-violet-100/80 border border-violet-200 flex items-center justify-center">
+                <div className="w-11 h-11 rounded-2xl bg-violet-100/80 border border-violet-200 flex items-center justify-center shrink-0">
                   {app.icon}
                 </div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-violet-700 text-right">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-violet-700 text-right break-words">
                   {app.suiteLabel}
                 </span>
               </div>
 
               <div>
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h3 className="text-xl sm:text-2xl font-extrabold text-[#141129] tracking-tight">
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-[#141129] tracking-tight break-words">
                     {app.title}
                   </h3>
                   {app.websiteUrl && app.websiteLabel && (
@@ -186,7 +186,9 @@ export const OurAppsSection: React.FC<OurAppsSectionProps> = ({
                   </p>
                 )}
                 {app.platforms && (
-                  <p className="text-[11px] font-medium text-[#5B5480] mt-1.5">{app.platforms}</p>
+                  <p className="text-[11px] font-medium text-[#5B5480] mt-1.5 break-words">
+                    {app.platforms}
+                  </p>
                 )}
                 {app.releaseNote && (
                   <p className="text-[11px] font-bold text-violet-800 mt-1">{app.releaseNote}</p>
@@ -222,18 +224,18 @@ export const OurAppsSection: React.FC<OurAppsSectionProps> = ({
               </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-violet-200/60 flex flex-wrap gap-2">
+            <div className="mt-6 pt-4 border-t border-violet-200/60 flex flex-wrap gap-2.5">
               <button
                 type="button"
                 onClick={() => onInspectApp(app)}
-                className="btn-standard-primary rounded-xl px-4 py-2.5 text-xs flex-1"
+                className="btn-standard-primary rounded-xl px-4 py-2.5 text-xs flex-1 min-w-[160px]"
               >
                 Explore Full Features
               </button>
               <button
                 type="button"
                 onClick={() => onBookDemo(app.title)}
-                className="btn-standard-glass rounded-xl px-4 py-2.5 text-xs"
+                className="btn-standard-glass rounded-xl px-4 py-2.5 text-xs min-w-[140px]"
               >
                 Request Early Access
               </button>

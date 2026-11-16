@@ -150,11 +150,11 @@ export const DEFAULT_DEMO_PRODUCTS: StoreAppProduct[] = [
     fileSize: 'Ready Setup',
     downloadsCount: 389,
     description:
-      'Reads Customs GDs, Bilty slips, commercial invoices, ID cards, and handwritten receipts straight from a photo or file into organized business records.',
+      'Reads Customs GDs, transport consignment notes, commercial invoices, ID cards, and handwritten receipts straight from a photo or file into organized business records.',
     features: [
       'Snap a photo or pick a document to read bills and clearance files',
       'Extracts party names, item details, dates, and tax totals automatically',
-      'Handles handwritten Bilty slips, fuel receipts, and office vouchers',
+      'Handles handwritten dispatch slips, fuel receipts, and office vouchers',
       'Saves extracted records cleanly straight into your billing or job files',
     ],
     demoCredentials: 'Live walkthrough available via Karachi Desk',
@@ -601,7 +601,7 @@ export function generateDemoPackageHtml(product: StoreAppProduct): string {
       Direct Mobile: +93-321-9222883 | WhatsApp: +92-339-8884124 | Landline: 021-36601055 | Email: info@myfe.org | Web: myfe.org
     </p>
     <a class="btn" href="https://wa.me/923398884124?text=${encodeURIComponent(
-      `Assalam-o-Alaikum Make Your Fly Easy, I would like a live walkthrough and commercial activation for ${product.title} (${product.version}).`
+      `Hello Make Your Fly Easy Team, I would like a live walkthrough and commercial activation for ${product.title} (${product.version}).`
     )}">Request Live Demo on WhatsApp →</a>
   </div>
 </body>

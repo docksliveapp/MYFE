@@ -23,9 +23,9 @@ export const LegalSecurityModal: React.FC<LegalSecurityModalProps> = ({
       aria-modal="true"
       aria-label="Privacy Policy and Terms & Conditions"
     >
-      <div className="glass-surface glass-modal-card w-full max-w-4xl rounded-3xl bg-white/95 overflow-hidden max-h-[90vh] flex flex-col">
+      <div className="glass-surface glass-modal-card w-full max-w-4xl rounded-3xl bg-white/95 dark:bg-[#130E26]/95 overflow-hidden max-h-[90vh] flex flex-col">
         {/* Top Modal Header */}
-        <div className="px-5 sm:px-7 pt-5 pb-4 border-b border-violet-200/70 bg-gradient-to-r from-[#F4F0FF] via-white to-[#EFE8FF] flex items-start justify-between gap-4">
+        <div className="px-5 sm:px-7 pt-5 pb-4 border-b border-violet-200/70 bg-gradient-to-r from-[#F4F0FF] via-white to-[#EFE8FF] dark:from-[#1E153D] dark:via-[#16102E] dark:to-[#221746] flex items-start justify-between gap-4">
           <div>
             <span className="text-[11px] font-extrabold uppercase tracking-widest text-violet-700">
               Make Your Fly Easy · Legal &amp; Protection Center
@@ -43,14 +43,14 @@ export const LegalSecurityModal: React.FC<LegalSecurityModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Close Legal Window"
-            className="btn-standard-soft rounded-xl p-2 shrink-0"
+            className="btn-standard-soft rounded-xl p-2.5 shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* 2-Tab Navigation */}
-        <div className="px-5 sm:px-7 py-3 border-b border-violet-200/60 bg-white/80 flex flex-wrap gap-2">
+        <div className="px-5 sm:px-7 py-3 border-b border-violet-200/60 bg-white/80 dark:bg-[#16102E]/85 flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => onSelectTab('privacy')}

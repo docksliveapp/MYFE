@@ -41,11 +41,11 @@ export const OurClientsSection: React.FC<OurClientsSectionProps> = ({ id = 'our-
         {OUR_CLIENTS.map((client, index) => (
           <li
             key={client.name}
-            className="glass-surface rounded-2xl px-5 py-4 flex items-center gap-4"
+            className="glass-surface rounded-2xl px-5 py-4 flex items-center gap-4 hover:-translate-y-0.5 transition-transform duration-200"
           >
             <div
               aria-hidden="true"
-              className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#F4F0FF] to-[#E5D9FF] border border-violet-200/80 flex items-center justify-center shrink-0 font-display text-sm font-extrabold text-royal-purple tracking-tight shadow-xs"
+              className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#F4F0FF] to-[#E5D9FF] dark:from-violet-900/60 dark:to-purple-900/50 border border-violet-200/80 dark:border-violet-400/30 flex items-center justify-center shrink-0 font-display text-sm font-extrabold text-royal-purple tracking-tight shadow-xs"
             >
               {client.monogram}
             </div>
@@ -53,7 +53,7 @@ export const OurClientsSection: React.FC<OurClientsSectionProps> = ({ id = 'our-
               <div className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-violet-700/80 tabular-nums">
                 {String(index + 1).padStart(2, '0')}
               </div>
-              <div className="text-sm sm:text-[15px] font-extrabold text-[#141129] leading-snug">
+              <div className="text-sm sm:text-[15px] font-extrabold text-[#141129] leading-snug break-words">
                 {client.name}
               </div>
             </div>

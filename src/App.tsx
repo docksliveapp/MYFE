@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   AlertCircle,
   ArrowLeft,
@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Copy,
   Cpu,
+  Download,
   ExternalLink,
   Eye,
   FileCheck2,
@@ -24,11 +25,13 @@ import {
   Menu,
   MessageCircle,
   Mic,
+  Moon,
   Phone,
   Scale,
   Shield,
   ShoppingBag,
   Sparkles,
+  Sun,
   Truck,
   Utensils,
   X,
@@ -45,6 +48,8 @@ import {
 import {
   fetchPublicSoftwareCatalog,
   INQUIRY_LIMITS,
+  InquiryArchiveRecord,
+  loadInquiryArchive,
   submitProjectInquiry,
 } from './services/firestoreService';
 
@@ -339,7 +344,7 @@ const BUILD_CAPABILITIES: BuildCapability[] = [
     title: 'Smart Document, Invoice & Photo Reader',
     category: 'Paperless Office Work',
     whatItDoes:
-      'Reads Customs GDs, Bilty slips, commercial invoices, IDs, and handwritten receipts straight into organized digital records.',
+      'Reads Customs GDs, transport consignment notes, commercial invoices, IDs, and handwritten receipts straight into organized digital records.',
     howItWorks:
       'Your staff simply snaps a photo or selects a PDF file; the software pulls out names, dates, items, and amounts ready to review and save.',
     benefits: [
@@ -430,7 +435,7 @@ const ProductBannerArt: React.FC<{
   }
 
   return (
-    <div className="relative h-36 w-full overflow-hidden border-b border-violet-200/60 bg-gradient-to-br from-[#F4F0FF] via-[#FFFFFF] to-[#EAE2FF] p-5 flex flex-col justify-between">
+    <div className="relative h-36 w-full overflow-hidden border-b border-violet-200/60 bg-gradient-to-br from-[#F4F0FF] via-[#FFFFFF] to-[#EAE2FF] dark:from-[#1B1438] dark:via-[#15102C] dark:to-[#221844] p-5 flex flex-col justify-between">
       <div
         className="absolute -right-8 -top-8 w-36 h-36 rounded-full opacity-55 blur-2xl"
         style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.38), transparent 70%)' }}
@@ -460,6 +465,16 @@ const ProductBannerArt: React.FC<{
 
 export function App() {
   const [activePage, setActivePage] = useState<SitePage>(() => resolvePageFromUrl());
+  const [themeMode, setThemeMode] = useState<'light' | 'dark'>(() => {
+    if (typeof window === 'undefined') return 'light';
+    try {
+      const saved = localStorage.getItem('myfe_theme_mode');
+      if (saved === 'dark' || saved === 'light') return saved;
+    } catch {
+      // Ignore storage access errors
+    }
+    return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+  });
   const [products, setProducts] = useState<StoreAppProduct[]>(() => loadProductsFromStorage());
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
@@ -468,6 +483,22 @@ export function App() {
   const [spotlightProduct, setSpotlightProduct] = useState<StoreAppProduct | null>(null);
   const [spotlightSuite, setSpotlightSuite] = useState<ReadySuiteGuide | null>(null);
   const [legalTab, setLegalTab] = useState<LegalTab | null>(null);
+
+  useEffect(() => {
+    const isDark = themeMode === 'dark';
+    const root = document.documentElement;
+    root.classList.toggle('dark', isDark);
+    root.classList.toggle('light', !isDark);
+    try {
+      localStorage.setItem('myfe_theme_mode', themeMode);
+    } catch {
+      // Ignore storage quota errors
+    }
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) {
+      metaTheme.setAttribute('content', isDark ? '#0D0A1A' : '#6D28D9');
+    }
+  }, [themeMode]);
 
   useEffect(() => {
     const syncFromUrl = () => {
@@ -489,12 +520,16 @@ export function App() {
     return () => window.removeEventListener('hashchange', syncFromUrl);
   }, []);
 
-  // Contact form state
+  // Contact form state & inquiry durability archive
   const [contactName, setContactName] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [contactInterest, setContactInterest] = useState('');
   const [contactMessage, setContactMessage] = useState('');
   const [isSubmittingInquiry, setIsSubmittingInquiry] = useState(false);
+  const submittingLockRef = useRef(false);
+  const [archivedInquiries, setArchivedInquiries] = useState<InquiryArchiveRecord[]>(() =>
+    loadInquiryArchive()
+  );
   const [contactFeedback, setContactFeedback] = useState<{
     type: 'error' | 'success';
     text: string;
@@ -603,7 +638,7 @@ export function App() {
   const handleRequestCustomBuild = (capabilityTitle: string) => {
     setContactInterest(capabilityTitle);
     setContactMessage(
-      `Assalam-o-Alaikum, we would like a live walkthrough and details for ${capabilityTitle}.`
+      `Hello Make Your Fly Easy Team, we would like a live walkthrough and proposal for ${capabilityTitle}.`
     );
     setSpotlightProduct(null);
     setSpotlightSuite(null);
@@ -611,15 +646,51 @@ export function App() {
     showToast(`Prefilled inquiry form for "${capabilityTitle}".`, 'info');
   };
 
+  const handleDownloadInquiryBackup = () => {
+    const records = loadInquiryArchive();
+    if (records.length === 0) {
+      showToast('No saved inquiry records available on this device yet.', 'info');
+      return;
+    }
+    try {
+      const payload = JSON.stringify(
+        {
+          exportedAt: new Date().toISOString(),
+          organization: 'Make Your Fly Easy',
+          totalRecords: records.length,
+          inquiries: records,
+        },
+        null,
+        2
+      );
+      const blob = new Blob([payload], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `myfe-inquiry-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      showToast(`Exported ${records.length} inquiry backup record(s) securely.`);
+    } catch {
+      showToast('Unable to export inquiry backup in this browser.', 'error');
+    }
+  };
+
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSubmittingInquiry) return;
+    if (submittingLockRef.current || isSubmittingInquiry) return;
     setContactFeedback(null);
 
     const name = contactName.trim();
     const phone = contactPhone.trim();
     const digits = phone.replace(/\D/g, '');
-    if (name.length < INQUIRY_LIMITS.NAME_MIN || digits.length < 7 || !INQUIRY_LIMITS.PHONE_PATTERN.test(phone)) {
+    if (
+      name.length < INQUIRY_LIMITS.NAME_MIN ||
+      digits.length < 7 ||
+      !INQUIRY_LIMITS.PHONE_PATTERN.test(phone)
+    ) {
       setContactFeedback({
         type: 'error',
         text: 'Please enter your Full Name (2+ characters) and a valid WhatsApp / Mobile number.',
@@ -627,23 +698,27 @@ export function App() {
       return;
     }
 
+    submittingLockRef.current = true;
     setIsSubmittingInquiry(true);
     try {
-      await submitProjectInquiry({
+      const result = await submitProjectInquiry({
         name,
         phone,
         interest: contactInterest,
         message: contactMessage,
       });
+      setArchivedInquiries(loadInquiryArchive());
 
       const resolvedInterest = contactInterest.trim() || 'General Software Inquiry';
-      const text = `Assalam-o-Alaikum Make Your Fly Easy!\nName: ${name}\nPhone: ${phone}\nInterest: ${resolvedInterest}\nBrief: ${
-        contactMessage.trim() || 'Requesting live demo & proposal.'
+      const text = `Hello Make Your Fly Easy Team,\nName: ${name}\nPhone: ${phone}\nInterest: ${resolvedInterest}\nBrief: ${
+        contactMessage.trim() || 'Requesting a live demonstration and proposal.'
       }`;
 
       setContactFeedback({
         type: 'success',
-        text: 'Inquiry recorded securely! Opening direct WhatsApp line with our Karachi engineering desk.',
+        text: result.deduplicated
+          ? 'Your identical inquiry for today is already safely archived (no duplicate created). Opening direct WhatsApp desk.'
+          : 'Inquiry recorded securely with local backup! Opening direct WhatsApp line with our Karachi engineering desk.',
       });
       setContactName('');
       setContactPhone('');
@@ -656,6 +731,7 @@ export function App() {
         text: 'Could not record inquiry cleanly. Please connect directly via WhatsApp below.',
       });
     } finally {
+      submittingLockRef.current = false;
       setIsSubmittingInquiry(false);
     }
   };
@@ -691,21 +767,21 @@ export function App() {
         </div>
       )}
 
-      {/* STICKY GLASS HEADER (PURE WEBSITE — NO LOGIN / SIGN UP / ADMIN PORTAL) */}
-      <header className="sticky top-0 z-40 border-b border-violet-200/60 bg-white/75 backdrop-blur-2xl shadow-[0_6px_30px_-10px_rgba(46,16,101,0.09)]">
-        <div className="mx-auto max-w-7xl px-3 sm:px-6 h-16 sm:h-[74px] flex items-center justify-between gap-2 sm:gap-4">
+      {/* STICKY GLASS HEADER (PURE WEBSITE — LIGHT & DARK FROSTED GLASS) */}
+      <header className="sticky top-0 z-40 pt-[env(safe-area-inset-top)] border-b border-violet-200/60 bg-white/75 dark:bg-[#130E26]/85 backdrop-blur-2xl shadow-[0_6px_30px_-10px_rgba(46,16,101,0.09)]">
+        <div className="mx-auto max-w-7xl px-3 sm:px-6 min-h-16 sm:min-h-[74px] py-1.5 flex items-center justify-between gap-2 sm:gap-4">
           {/* Left: Non-truncating Royal Logo + Wordmark */}
           <button
             type="button"
             onClick={() => navigateToPage('home')}
-            className="group flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 xl:flex-initial text-left cursor-pointer"
+            className="group flex items-center gap-2 sm:gap-3 min-w-0 flex-1 xl:flex-initial text-left cursor-pointer"
           >
-            <RoyalLogo idSuffix="nav" className="h-12 sm:h-14 w-auto shrink-0" />
+            <RoyalLogo idSuffix="nav" className="h-11 sm:h-14 w-auto shrink-0" />
             <div className="min-w-0 h-8 sm:h-9 flex flex-col justify-between py-[1px]">
-              <div className="font-display font-extrabold text-[15px] sm:text-[18px] leading-none tracking-tight text-royal-purple whitespace-nowrap">
+              <div className="font-display font-extrabold text-[14px] sm:text-[18px] leading-none tracking-tight text-royal-purple whitespace-nowrap">
                 MAKE YOUR FLY EASY
               </div>
-              <div className="text-[8.5px] sm:text-[10.5px] leading-none font-semibold uppercase tracking-[0.11em] text-[#5B5480] whitespace-nowrap">
+              <div className="text-[8px] sm:text-[10.5px] leading-none font-semibold uppercase tracking-[0.1em] text-[#5B5480] whitespace-nowrap">
                 Custom Apps · ERPs · Websites · Smart Tools
               </div>
             </div>
@@ -781,12 +857,27 @@ export function App() {
             </button>
           </nav>
 
-          {/* Right Clean Action: Ready ERPs Only (WhatsApp moved to bottom-right green button) */}
-          <div className="hidden md:flex items-center gap-2.5 shrink-0">
+          {/* Right Actions: Light/Dark Frosted Glass Toggle + Ready ERPs + Mobile Menu */}
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setThemeMode((prev) => (prev === 'dark' ? 'light' : 'dark'))}
+              aria-label={themeMode === 'dark' ? 'Switch to Light Glass Theme' : 'Switch to Dark Glass Theme'}
+              title={themeMode === 'dark' ? 'Switch to Light Glass Theme' : 'Switch to Dark Glass Theme'}
+              className="btn-standard-glass rounded-xl px-2.5 sm:px-3 py-2 text-xs"
+            >
+              {themeMode === 'dark' ? (
+                <Sun className="w-4 h-4 text-amber-400" />
+              ) : (
+                <Moon className="w-4 h-4 text-violet-700" />
+              )}
+              <span className="hidden xl:inline">{themeMode === 'dark' ? 'Light' : 'Dark'}</span>
+            </button>
+
             <button
               type="button"
               onClick={() => navigateToPage('ready-erps')}
-              className={`${
+              className={`hidden md:inline-flex ${
                 activePage === 'ready-erps' ? 'btn-standard-primary' : 'btn-standard-glass'
               } rounded-xl px-4 py-2 text-xs`}
             >
@@ -797,27 +888,26 @@ export function App() {
               />
               Ready ERPs
             </button>
-          </div>
 
-          {/* Mobile / Tablet Menu Toggle */}
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen((v) => !v)}
-            aria-label="Toggle Menu"
-            className="lg:hidden btn-standard-glass rounded-xl p-2 shrink-0"
-          >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen((v) => !v)}
+              aria-label="Toggle Menu"
+              className="lg:hidden btn-standard-glass rounded-xl p-2 shrink-0"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile / Tablet Dropdown Glass Drawer */}
         {mobileMenuOpen && (
-          <div className="lg:hidden border-t border-violet-200/60 bg-white/92 backdrop-blur-2xl px-4 py-4 space-y-2.5">
+          <div className="lg:hidden border-t border-violet-200/60 bg-white/92 dark:bg-[#15102C]/95 backdrop-blur-2xl px-4 py-4 space-y-2.5">
             <div className="grid grid-cols-2 gap-2 text-xs font-semibold text-[#2E2759]">
               <button
                 type="button"
                 onClick={() => navigateToPage('home')}
-                className={`glass-inner-tile rounded-xl px-3 py-2.5 flex items-center justify-between text-left ${
+                className={`glass-inner-tile min-h-[44px] rounded-xl px-3 py-2.5 flex items-center justify-between text-left ${
                   activePage === 'home' ? 'font-bold text-violet-800 border-violet-400' : ''
                 }`}
               >
@@ -827,7 +917,7 @@ export function App() {
               <button
                 type="button"
                 onClick={() => navigateToPage('our-apps')}
-                className={`glass-inner-tile rounded-xl px-3 py-2.5 flex items-center justify-between text-left ${
+                className={`glass-inner-tile min-h-[44px] rounded-xl px-3 py-2.5 flex items-center justify-between text-left ${
                   activePage === 'our-apps' ? 'font-bold text-violet-800 border-violet-400' : ''
                 }`}
               >
@@ -837,7 +927,7 @@ export function App() {
               <button
                 type="button"
                 onClick={() => navigateToPage('our-clients')}
-                className={`glass-inner-tile rounded-xl px-3 py-2.5 flex items-center justify-between text-left ${
+                className={`glass-inner-tile min-h-[44px] rounded-xl px-3 py-2.5 flex items-center justify-between text-left ${
                   activePage === 'our-clients' ? 'font-bold text-violet-800 border-violet-400' : ''
                 }`}
               >
@@ -847,7 +937,7 @@ export function App() {
               <button
                 type="button"
                 onClick={() => navigateToPage('capabilities')}
-                className={`glass-inner-tile rounded-xl px-3 py-2.5 flex items-center justify-between text-left ${
+                className={`glass-inner-tile min-h-[44px] rounded-xl px-3 py-2.5 flex items-center justify-between text-left ${
                   activePage === 'capabilities' ? 'font-bold text-violet-800 border-violet-400' : ''
                 }`}
               >
@@ -857,7 +947,7 @@ export function App() {
               <button
                 type="button"
                 onClick={() => navigateToPage('about')}
-                className={`glass-inner-tile rounded-xl px-3 py-2.5 flex items-center justify-between text-left ${
+                className={`glass-inner-tile min-h-[44px] rounded-xl px-3 py-2.5 flex items-center justify-between text-left ${
                   activePage === 'about' ? 'font-bold text-violet-800 border-violet-400' : ''
                 }`}
               >
@@ -867,7 +957,7 @@ export function App() {
               <button
                 type="button"
                 onClick={() => navigateToPage('contact')}
-                className={`glass-inner-tile rounded-xl px-3 py-2.5 flex items-center justify-between text-left ${
+                className={`glass-inner-tile min-h-[44px] rounded-xl px-3 py-2.5 flex items-center justify-between text-left ${
                   activePage === 'contact' ? 'font-bold text-violet-800 border-violet-400' : ''
                 }`}
               >
@@ -877,7 +967,7 @@ export function App() {
               <button
                 type="button"
                 onClick={() => navigateToPage('ready-erps')}
-                className="col-span-2 btn-standard-primary rounded-xl px-3.5 py-2.5 text-xs justify-between"
+                className="col-span-2 btn-standard-primary min-h-[44px] rounded-xl px-3.5 py-2.5 text-xs justify-between"
               >
                 <span className="flex items-center gap-2">
                   <Layers className="w-3.5 h-3.5" />
@@ -895,7 +985,7 @@ export function App() {
         {activePage === 'home' && (
           <section
             id="home"
-            className="mx-auto max-w-5xl px-4 sm:px-6 pt-10 sm:pt-16 pb-14 sm:pb-20"
+            className="page-enter mx-auto max-w-5xl px-4 sm:px-6 pt-10 sm:pt-16 pb-14 sm:pb-20"
           >
             <div className="glass-surface rounded-[2rem] px-6 py-10 sm:px-14 sm:py-16 text-center flex flex-col items-center">
               {/* Top Centered Large Official Logo */}
@@ -949,7 +1039,7 @@ export function App() {
                 <button
                   type="button"
                   onClick={() => navigateToPage('ready-erps')}
-                  className="btn-standard-primary rounded-xl px-6 py-3 text-sm"
+                  className="btn-standard-primary rounded-xl px-6 py-3 text-sm min-w-[175px]"
                 >
                   <Layers className="w-4 h-4" />
                   Explore Ready ERPs
@@ -957,7 +1047,7 @@ export function App() {
                 <button
                   type="button"
                   onClick={() => navigateToPage('capabilities')}
-                  className="btn-standard-glass rounded-xl px-6 py-3 text-sm"
+                  className="btn-standard-glass rounded-xl px-6 py-3 text-sm min-w-[175px]"
                 >
                   <Sparkles className="w-4 h-4 text-violet-700" />
                   View Capabilities
@@ -965,7 +1055,7 @@ export function App() {
                 <button
                   type="button"
                   onClick={() => navigateToPage('contact')}
-                  className="btn-standard-soft rounded-xl px-6 py-3 text-sm"
+                  className="btn-standard-soft rounded-xl px-6 py-3 text-sm min-w-[155px]"
                 >
                   Contact Us
                   <ArrowRight className="w-4 h-4" />
@@ -980,7 +1070,10 @@ export function App() {
                   { label: 'Delivery Speed', val: 'Fast Launch' },
                   { label: 'Direct Desk', val: '24/7 Support' },
                 ].map((stat) => (
-                  <div key={stat.label} className="glass-inner-tile rounded-2xl px-3.5 py-3.5">
+                  <div
+                    key={stat.label}
+                    className="glass-inner-tile rounded-2xl px-3.5 py-3.5 hover:-translate-y-0.5 transition-transform duration-200"
+                  >
                     <div className="font-display text-base sm:text-lg font-extrabold text-royal-purple tabular-nums">
                       {stat.val}
                     </div>
@@ -998,7 +1091,7 @@ export function App() {
         {activePage === 'our-apps' && (
           <section
             id="our-apps"
-            className="mx-auto max-w-6xl px-4 sm:px-6 pt-8 sm:pt-12 pb-16 sm:pb-20 space-y-6"
+            className="page-enter mx-auto max-w-6xl px-4 sm:px-6 pt-8 sm:pt-12 pb-16 sm:pb-20 space-y-6"
           >
             <div>
               <button
@@ -1022,7 +1115,7 @@ export function App() {
         {activePage === 'our-clients' && (
           <section
             id="our-clients"
-            className="mx-auto max-w-6xl px-4 sm:px-6 pt-8 sm:pt-12 pb-16 sm:pb-20 space-y-6"
+            className="page-enter mx-auto max-w-6xl px-4 sm:px-6 pt-8 sm:pt-12 pb-16 sm:pb-20 space-y-6"
           >
             <div>
               <button
@@ -1042,9 +1135,9 @@ export function App() {
         {activePage === 'ready-erps' && (
           <section
             id="ready-erps"
-            className="mx-auto max-w-7xl px-4 sm:px-6 pt-8 sm:pt-12 pb-16 sm:pb-20"
+            className="page-enter mx-auto max-w-7xl px-4 sm:px-6 pt-8 sm:pt-12 pb-16 sm:pb-20 space-y-10"
           >
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
               <div className="max-w-2xl">
                 <button
                   type="button"
@@ -1061,8 +1154,9 @@ export function App() {
                   What Our Ready ERPs Do &amp; How They Help You
                 </h1>
                 <p className="body-fluid-copy text-[#47416A] mt-2">
-                  Each software is built around real daily office work—clear to operate, fast for
-                  staff, and focused on saving time while protecting every rupee of profit.
+                  Each software suite is built around daily business operations—clear to operate,
+                  fast for staff, and engineered to save time while protecting every margin of
+                  profit.
                 </p>
               </div>
               <button
@@ -1079,14 +1173,14 @@ export function App() {
                 {READY_SUITES.map((suite) => (
                   <article
                     key={suite.id}
-                    className="glass-surface rounded-3xl p-6 flex flex-col justify-between"
+                    className="glass-surface rounded-3xl p-6 flex flex-col justify-between hover:-translate-y-0.5 transition-transform duration-200"
                   >
                     <div className="space-y-4">
                       <div className="flex items-center justify-between gap-3">
-                        <div className="w-11 h-11 rounded-2xl bg-violet-100/80 border border-violet-200 flex items-center justify-center">
+                        <div className="w-11 h-11 rounded-2xl bg-violet-100/80 border border-violet-200 flex items-center justify-center shrink-0">
                           {suite.icon}
                         </div>
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-violet-700">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-violet-700 text-right">
                           {suite.suiteLabel}
                         </span>
                       </div>
@@ -1130,7 +1224,7 @@ export function App() {
                       <button
                         type="button"
                         onClick={() => setSpotlightSuite(suite)}
-                        className="btn-standard-primary rounded-xl px-4 py-2.5 text-xs flex-1"
+                        className="btn-standard-primary rounded-xl px-4 py-2.5 text-xs flex-1 min-w-[140px]"
                       >
                         See How It Helps
                       </button>
@@ -1145,12 +1239,72 @@ export function App() {
                   </article>
                 ))}
               </div>
+
+              {/* Compact Zero-Horizontal-Scroll Executive Comparison Matrix */}
+              <div className="glass-surface rounded-3xl p-5 sm:p-7 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+                  <div>
+                    <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-violet-700">
+                      Side-by-Side Overview
+                    </p>
+                    <h2 className="text-lg sm:text-xl font-extrabold text-[#141129] mt-0.5">
+                      Ready ERP Suite Comparison Matrix
+                    </h2>
+                  </div>
+                  <p className="text-xs text-[#5B5480]">
+                    Select any row to inspect full workflow capabilities.
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-violet-200/70 overflow-hidden">
+                  <table className="glass-table text-left">
+                    <thead>
+                      <tr className="border-b border-violet-200/70 bg-violet-100/50 dark:bg-violet-900/35 text-[11px] font-extrabold uppercase tracking-wider text-violet-800">
+                        <th className="px-3 sm:px-5 py-3 w-[34%]">Software Suite</th>
+                        <th className="px-3 sm:px-5 py-3 w-[44%]">Core Operational Scope</th>
+                        <th className="px-3 sm:px-5 py-3 w-[22%] text-right">Explore</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-violet-200/50 text-xs sm:text-[13px]">
+                      {READY_SUITES.map((suite) => (
+                        <tr
+                          key={suite.id}
+                          onClick={() => setSpotlightSuite(suite)}
+                          className="glass-table-row cursor-pointer"
+                        >
+                          <td className="px-3 sm:px-5 py-3.5 font-extrabold text-[#141129]">
+                            <div className="text-[10px] font-bold uppercase tracking-wider text-violet-700 mb-0.5">
+                              {suite.suiteLabel}
+                            </div>
+                            <span>{suite.title}</span>
+                          </td>
+                          <td className="px-3 sm:px-5 py-3.5 text-[#47416A] leading-relaxed">
+                            {suite.benefits[0]}
+                          </td>
+                          <td className="px-3 sm:px-5 py-3.5 text-right align-middle">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSpotlightSuite(suite);
+                              }}
+                              className="btn-standard-soft rounded-lg px-2.5 sm:px-3 py-1.5 text-[11px]"
+                            >
+                              Details
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </section>
         )}
 
         {/* PAGE 3: CAPABILITIES PAGE */}
         {activePage === 'capabilities' && (
-          <section id="capabilities" className="mx-auto max-w-7xl px-4 sm:px-6 pt-8 sm:pt-12 pb-16 sm:pb-20">
+          <section id="capabilities" className="page-enter mx-auto max-w-7xl px-4 sm:px-6 pt-8 sm:pt-12 pb-16 sm:pb-20">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
               <div className="max-w-2xl">
                 <button
@@ -1187,7 +1341,7 @@ export function App() {
                 {BUILD_CAPABILITIES.map((cap) => (
                   <article
                     key={cap.num}
-                    className="glass-surface rounded-3xl p-5 flex flex-col justify-between"
+                    className="glass-surface rounded-3xl p-5 flex flex-col justify-between hover:-translate-y-0.5 transition-transform duration-200"
                   >
                     <div className="space-y-3">
                       <div className="flex items-center justify-between gap-2">
@@ -1249,7 +1403,7 @@ export function App() {
 
         {/* PAGE 4: ABOUT PAGE (DELIVERY ARCHITECTURE + GOVERNANCE & POLICIES) */}
         {activePage === 'about' && (
-          <section id="about" className="mx-auto max-w-7xl px-4 sm:px-6 pt-8 sm:pt-12 pb-16 sm:pb-20 space-y-12">
+          <section id="about" className="page-enter mx-auto max-w-7xl px-4 sm:px-6 pt-8 sm:pt-12 pb-16 sm:pb-20 space-y-12">
             <div>
               <button
                 type="button"
@@ -1407,7 +1561,7 @@ export function App() {
 
         {/* PAGE 5: CONTACT US PAGE (DIRECT HQ DESK + INQUIRY FORM + ALL SOCIAL MEDIA @makeyourflyeasy) */}
         {activePage === 'contact' && (
-          <section id="contact" className="mx-auto max-w-7xl px-4 sm:px-6 pt-8 sm:pt-12 pb-16 sm:pb-20 space-y-8">
+          <section id="contact" className="page-enter mx-auto max-w-7xl px-4 sm:px-6 pt-8 sm:pt-12 pb-16 sm:pb-20 space-y-8">
             <div>
               <button
                 type="button"
@@ -1481,7 +1635,7 @@ export function App() {
                             <div className="text-xs font-bold text-[#141129]">WhatsApp Desk</div>
                             <a
                               href={buildWhatsAppUrl(
-                                'Assalam-o-Alaikum Make Your Fly Easy, I would like to book a live ERP demonstration.'
+                                'Hello Make Your Fly Easy Team, I would like to schedule a live ERP demonstration.'
                               )}
                               target="_blank"
                               rel="noopener noreferrer"
@@ -1688,7 +1842,7 @@ export function App() {
                       </button>
                       <a
                         href={`mailto:${EMAIL_ADDRESS}?subject=${encodeURIComponent(
-                          `Project Inquiry: ${contactInterest}`
+                          `Project Inquiry: ${contactInterest.trim() || 'Enterprise Software Solutions'}`
                         )}`}
                         className="btn-standard-glass rounded-xl px-5 py-3 text-sm"
                       >
@@ -1696,6 +1850,22 @@ export function App() {
                         Send Email
                       </a>
                     </div>
+
+                    {archivedInquiries.length > 0 && (
+                      <div className="rounded-xl border border-violet-200/70 bg-violet-50/70 dark:bg-violet-950/35 px-3.5 py-2.5 flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-[11px] font-semibold text-[#362F5A]">
+                          {archivedInquiries.length} submitted inquiry record(s) backed up on this device
+                        </span>
+                        <button
+                          type="button"
+                          onClick={handleDownloadInquiryBackup}
+                          className="btn-standard-soft rounded-lg px-3 py-1.5 text-[11px]"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          Download Backup (.json)
+                        </button>
+                      </div>
+                    )}
 
                     <p className="text-[11px] leading-relaxed text-[#5B5480] pt-1">
                       By submitting this inquiry, you agree to our{' '}
@@ -1768,7 +1938,7 @@ export function App() {
       </main>
 
       {/* EXECUTIVE MULTI-PAGE CORPORATE FOOTER */}
-      <footer className="relative z-10 border-t border-violet-200/60 bg-white/75 backdrop-blur-2xl">
+      <footer className="relative z-10 border-t border-violet-200/60 bg-white/75 dark:bg-[#130E26]/85 backdrop-blur-2xl">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 space-y-6">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
             <div className="flex items-center gap-3">
@@ -1893,7 +2063,7 @@ export function App() {
       {/* READY SUITE OVERVIEW MODAL (WHAT IT DOES · HOW IT WORKS · BENEFITS) */}
       {(spotlightSuite || spotlightProduct) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#1E1B4B]/40 backdrop-blur-md">
-          <div className="glass-surface glass-modal-card w-full max-w-2xl rounded-3xl bg-white/95 overflow-hidden max-h-[90vh] flex flex-col">
+          <div className="glass-surface glass-modal-card w-full max-w-2xl rounded-3xl bg-white/95 dark:bg-[#130E26]/95 overflow-hidden max-h-[90vh] flex flex-col">
             {spotlightProduct && !spotlightSuite && (
               <ProductBannerArt
                 product={spotlightProduct}
@@ -2018,7 +2188,7 @@ export function App() {
                 )}
                 <a
                   href={buildWhatsAppUrl(
-                    `Assalam-o-Alaikum Make Your Fly Easy, I want a live demo of ${
+                    `Hello Make Your Fly Easy Team, I would like a live demonstration of ${
                       spotlightSuite ? spotlightSuite.title : spotlightProduct?.title
                     }.`
                   )}
@@ -2057,13 +2227,13 @@ export function App() {
       {/* FLOATING BOTTOM-RIGHT WHATSAPP BUTTON (CLASSIC GREEN ICON ONLY — NO NUMBER) */}
       <a
         href={buildWhatsAppUrl(
-          'Assalam-o-Alaikum Make Your Fly Easy, I would like to connect regarding your software solutions.'
+          'Hello Make Your Fly Easy Team, I would like to connect regarding your software solutions.'
         )}
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Chat on WhatsApp"
         title="Chat on WhatsApp"
-        className="fixed bottom-5 right-5 z-40 w-14 h-14 rounded-full bg-[#25D366] hover:bg-[#1EBE5D] text-white shadow-[0_12px_30px_-4px_rgba(37,211,102,0.58)] ring-4 ring-white/90 flex items-center justify-center transition-all duration-200 hover:-translate-y-1 hover:scale-105 active:scale-95"
+        className="whatsapp-fab fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom))] right-5 z-40 w-14 h-14 rounded-full bg-[#25D366] hover:bg-[#1EBE5D] text-white shadow-[0_12px_30px_-4px_rgba(37,211,102,0.58)] ring-4 ring-white/90 dark:ring-[#1F1540] flex items-center justify-center transition-all duration-200 hover:-translate-y-1 hover:scale-105 active:scale-95"
       >
         <svg
           viewBox="0 0 24 24"
