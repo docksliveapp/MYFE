@@ -1,4 +1,4 @@
-const CACHE_NAME = 'myfe-shell-v2';
+const CACHE_NAME = 'myfe-shell-v3';
 const CORE_ASSETS = [
   '/',
   '/index.html',
@@ -49,16 +49,16 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Network-first for scripts/styles so updates apply immediately without stale UI cache
   event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-      return fetch(request).then((response) => {
+    fetch(request)
+      .then((response) => {
         if (response && response.status === 200 && response.type === 'basic') {
           const copy = response.clone();
           void caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
         }
         return response;
-      });
-    })
+      })
+      .catch(() => caches.match(request))
   );
 });

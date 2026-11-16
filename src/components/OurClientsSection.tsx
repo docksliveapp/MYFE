@@ -45,7 +45,7 @@ export const OurClientsSection: React.FC<OurClientsSectionProps> = ({ id = 'our-
           >
             <div
               aria-hidden="true"
-              className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#F4F0FF] to-[#E5D9FF] dark:from-violet-900/60 dark:to-purple-900/50 border border-violet-200/80 dark:border-violet-400/30 flex items-center justify-center shrink-0 font-display text-sm font-extrabold text-royal-purple tracking-tight shadow-xs"
+              className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#F4F0FF] to-[#E5D9FF] border border-violet-200/80 flex items-center justify-center shrink-0 font-display text-sm font-extrabold text-royal-purple tracking-tight shadow-xs"
             >
               {client.monogram}
             </div>

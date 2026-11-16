@@ -1,9 +1,8 @@
 @import "tailwindcss";
-@custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
   :root {
-    color-scheme: light;
+    color-scheme: only light;
     --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
@@ -21,23 +20,6 @@
     --tile-bg-hover: rgba(255, 255, 255, 0.94);
     --table-stripe: rgba(245, 242, 255, 0.55);
     --table-hover: rgba(124, 58, 237, 0.09);
-  }
-
-  html.dark {
-    color-scheme: dark;
-    --page-bg: #0D0A1A;
-    --ink-primary: #F5F3FF;
-    --ink-secondary: #DCD6FA;
-    --ink-muted: #B6ACE3;
-    --ink-accent: #C4B5FD;
-    --glass-bg-start: rgba(31, 23, 61, 0.72);
-    --glass-bg-end: rgba(20, 15, 42, 0.62);
-    --glass-border: rgba(167, 139, 250, 0.24);
-    --glass-border-hover: rgba(196, 181, 253, 0.52);
-    --tile-bg: rgba(38, 28, 74, 0.62);
-    --tile-bg-hover: rgba(50, 38, 95, 0.82);
-    --table-stripe: rgba(45, 34, 86, 0.42);
-    --table-hover: rgba(167, 139, 250, 0.16);
   }
 
   html {
@@ -68,96 +50,13 @@
   }
 }
 
-/* Luminous Pearl Light & Midnight Amethyst Dark Glass Atmospheric Canvas */
+/* Luminous Pearl & Soft Amethyst Frosted Glass Atmospheric Canvas */
 .pearl-purple-canvas {
   background:
-    radial-gradient(ellipse 80% 50% at 12% 0%, rgba(167, 139, 250, 0.16) 0%, transparent 60%),
-    radial-gradient(ellipse 70% 45% at 88% 8%, rgba(192, 132, 252, 0.14) 0%, transparent 58%),
-    radial-gradient(ellipse 60% 50% at 50% 45%, rgba(255, 255, 255, 0.95) 0%, rgba(248, 247, 252, 0.9) 100%),
+    radial-gradient(ellipse 80% 50% at 12% 0%, rgba(167, 139, 250, 0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 45% at 88% 8%, rgba(192, 132, 252, 0.16) 0%, transparent 58%),
+    radial-gradient(ellipse 60% 50% at 50% 45%, rgba(255, 255, 255, 0.96) 0%, rgba(248, 247, 252, 0.92) 100%),
     linear-gradient(180deg, #FFFFFF 0%, #F7F5FD 48%, #F2EFFB 100%);
-}
-
-html.dark .pearl-purple-canvas {
-  background:
-    radial-gradient(ellipse 80% 50% at 12% 0%, rgba(124, 58, 237, 0.24) 0%, transparent 60%),
-    radial-gradient(ellipse 70% 45% at 88% 10%, rgba(168, 85, 247, 0.18) 0%, transparent 58%),
-    radial-gradient(ellipse 70% 55% at 50% 60%, rgba(30, 20, 62, 0.65) 0%, rgba(13, 10, 26, 0.95) 100%),
-    linear-gradient(180deg, #0D0A1A 0%, #130F28 52%, #0B0816 100%);
-}
-
-/* Dark Glass Semantic Contrast Compatibility */
-html.dark .text-\[\#141129\],
-html.dark .text-\[\#1E1B4B\] {
-  color: #F5F3FF;
-}
-
-html.dark .text-\[\#2E2759\],
-html.dark .text-\[\#362F5A\],
-html.dark .text-\[\#3B3561\],
-html.dark .text-\[\#47416A\] {
-  color: #DDD6FE;
-}
-
-html.dark .text-\[\#5B5480\],
-html.dark .text-\[\#7B749E\] {
-  color: #B4A9E6;
-}
-
-html.dark .text-violet-700,
-html.dark .text-violet-800,
-html.dark .text-violet-900 {
-  color: #C4B5FD;
-}
-
-html.dark .text-violet-700\/80 {
-  color: rgba(196, 181, 253, 0.85);
-}
-
-html.dark .bg-white\/75,
-html.dark .bg-white\/80,
-html.dark .bg-white\/90,
-html.dark .bg-white\/92,
-html.dark .bg-white\/95 {
-  background-color: rgba(20, 15, 42, 0.86);
-}
-
-html.dark .bg-violet-50 {
-  background-color: rgba(109, 40, 217, 0.2);
-}
-
-html.dark .bg-rose-50 {
-  background-color: rgba(190, 18, 60, 0.22);
-}
-
-html.dark .text-rose-800 {
-  color: #FDA4AF;
-}
-
-html.dark .border-rose-200 {
-  border-color: rgba(251, 113, 133, 0.35);
-}
-
-html.dark .bg-violet-100\/80 {
-  background-color: rgba(124, 58, 237, 0.22);
-}
-
-html.dark .border-violet-200,
-html.dark .border-violet-200\/60,
-html.dark .border-violet-200\/70 {
-  border-color: rgba(167, 139, 250, 0.24);
-}
-
-html.dark input,
-html.dark textarea,
-html.dark select {
-  background-color: rgba(24, 18, 48, 0.88);
-  border-color: rgba(167, 139, 250, 0.32);
-  color: #F5F3FF;
-}
-
-html.dark input::placeholder,
-html.dark textarea::placeholder {
-  color: #9D92CC;
 }
 
 /* Soft Animated Ambient Glass Refraction Orbs (Compositor Optimized) */
@@ -235,22 +134,8 @@ html.dark textarea::placeholder {
   color: transparent;
 }
 
-html.dark .text-royal-purple {
-  background: linear-gradient(135deg, #EDE9FE 0%, #C4B5FD 48%, #A855F7 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
 .text-amethyst-gradient {
   background: linear-gradient(135deg, #5B21B6 0%, #7C3AED 55%, #A855F7 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-html.dark .text-amethyst-gradient {
-  background: linear-gradient(135deg, #DDD6FE 0%, #A78BFA 55%, #C084FC 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -264,13 +149,7 @@ html.dark .text-amethyst-gradient {
     linear-gradient(to bottom, rgba(109, 40, 217, 0.032) 1px, transparent 1px);
 }
 
-html.dark .bg-pearl-grid {
-  background-image:
-    linear-gradient(to right, rgba(167, 139, 250, 0.06) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(167, 139, 250, 0.06) 1px, transparent 1px);
-}
-
-/* Full Glassmorphic Surface (Light & Dark Responsive) */
+/* Full Luminous Frosted Glass Surface */
 .glass-surface {
   position: relative;
   overflow: hidden;
@@ -288,24 +167,11 @@ html.dark .bg-pearl-grid {
     box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-html.dark .glass-surface {
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.14),
-    inset 0 -1px 0 0 rgba(167, 139, 250, 0.08),
-    0 18px 40px -10px rgba(4, 2, 14, 0.55);
-}
-
 .glass-surface:hover {
   border-color: var(--glass-border-hover);
   box-shadow:
     inset 0 1px 0 0 rgba(255, 255, 255, 0.96),
     0 20px 44px -10px rgba(109, 40, 217, 0.16);
-}
-
-html.dark .glass-surface:hover {
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.22),
-    0 22px 46px -10px rgba(109, 40, 217, 0.32);
 }
 
 .glass-surface::before {
@@ -344,10 +210,6 @@ html.dark .glass-surface:hover {
     transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
     border-color 200ms cubic-bezier(0.16, 1, 0.3, 1),
     background-color 200ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-html.dark .glass-inner-tile {
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
 }
 
 .glass-inner-tile:hover {
@@ -473,15 +335,6 @@ html.dark .glass-inner-tile {
   cursor: pointer;
 }
 
-html.dark .btn-standard-glass {
-  background: rgba(42, 31, 82, 0.78);
-  color: #F5F3FF;
-  border-color: rgba(167, 139, 250, 0.32);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.14),
-    0 8px 22px -6px rgba(4, 2, 14, 0.45);
-}
-
 .btn-standard-glass::after {
   content: "";
   position: absolute;
@@ -506,14 +359,6 @@ html.dark .btn-standard-glass {
   box-shadow:
     inset 0 1px 0 0 #FFFFFF,
     0 12px 26px -6px rgba(109, 40, 217, 0.2);
-}
-
-html.dark .btn-standard-glass:hover {
-  background: rgba(58, 43, 110, 0.92);
-  border-color: rgba(196, 181, 253, 0.58);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.22),
-    0 12px 26px -6px rgba(124, 58, 237, 0.35);
 }
 
 .btn-standard-glass:active {
@@ -546,13 +391,6 @@ html.dark .btn-standard-glass:hover {
   cursor: pointer;
 }
 
-html.dark .btn-standard-soft {
-  background: rgba(124, 58, 237, 0.22);
-  color: #EDE9FE;
-  border-color: rgba(167, 139, 250, 0.32);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
-}
-
 .btn-standard-soft::after {
   content: "";
   position: absolute;
@@ -575,12 +413,6 @@ html.dark .btn-standard-soft {
   background: rgba(237, 233, 254, 0.98);
   border-color: rgba(124, 58, 237, 0.5);
   box-shadow: 0 10px 22px -6px rgba(109, 40, 217, 0.18);
-}
-
-html.dark .btn-standard-soft:hover {
-  background: rgba(124, 58, 237, 0.36);
-  border-color: rgba(196, 181, 253, 0.56);
-  box-shadow: 0 10px 24px -6px rgba(124, 58, 237, 0.35);
 }
 
 .btn-standard-soft:active {

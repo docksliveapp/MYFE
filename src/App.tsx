@@ -25,13 +25,11 @@ import {
   Menu,
   MessageCircle,
   Mic,
-  Moon,
   Phone,
   Scale,
   Shield,
   ShoppingBag,
   Sparkles,
-  Sun,
   Truck,
   Utensils,
   X,
@@ -435,7 +433,7 @@ const ProductBannerArt: React.FC<{
   }
 
   return (
-    <div className="relative h-36 w-full overflow-hidden border-b border-violet-200/60 bg-gradient-to-br from-[#F4F0FF] via-[#FFFFFF] to-[#EAE2FF] dark:from-[#1B1438] dark:via-[#15102C] dark:to-[#221844] p-5 flex flex-col justify-between">
+    <div className="relative h-36 w-full overflow-hidden border-b border-violet-200/60 bg-gradient-to-br from-[#F4F0FF] via-[#FFFFFF] to-[#EAE2FF] p-5 flex flex-col justify-between">
       <div
         className="absolute -right-8 -top-8 w-36 h-36 rounded-full opacity-55 blur-2xl"
         style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.38), transparent 70%)' }}
@@ -465,16 +463,6 @@ const ProductBannerArt: React.FC<{
 
 export function App() {
   const [activePage, setActivePage] = useState<SitePage>(() => resolvePageFromUrl());
-  const [themeMode, setThemeMode] = useState<'light' | 'dark'>(() => {
-    if (typeof window === 'undefined') return 'light';
-    try {
-      const saved = localStorage.getItem('myfe_theme_mode');
-      if (saved === 'dark' || saved === 'light') return saved;
-    } catch {
-      // Ignore storage access errors
-    }
-    return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-  });
   const [products, setProducts] = useState<StoreAppProduct[]>(() => loadProductsFromStorage());
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
@@ -485,20 +473,14 @@ export function App() {
   const [legalTab, setLegalTab] = useState<LegalTab | null>(null);
 
   useEffect(() => {
-    const isDark = themeMode === 'dark';
-    const root = document.documentElement;
-    root.classList.toggle('dark', isDark);
-    root.classList.toggle('light', !isDark);
+    document.documentElement.classList.remove('dark');
+    document.documentElement.classList.add('light');
     try {
-      localStorage.setItem('myfe_theme_mode', themeMode);
+      localStorage.removeItem('myfe_theme_mode');
     } catch {
-      // Ignore storage quota errors
+      // Ignore storage access errors
     }
-    const metaTheme = document.querySelector('meta[name="theme-color"]');
-    if (metaTheme) {
-      metaTheme.setAttribute('content', isDark ? '#0D0A1A' : '#6D28D9');
-    }
-  }, [themeMode]);
+  }, []);
 
   useEffect(() => {
     const syncFromUrl = () => {
@@ -767,21 +749,21 @@ export function App() {
         </div>
       )}
 
-      {/* STICKY GLASS HEADER (PURE WEBSITE — LIGHT & DARK FROSTED GLASS) */}
-      <header className="sticky top-0 z-40 pt-[env(safe-area-inset-top)] border-b border-violet-200/60 bg-white/75 dark:bg-[#130E26]/85 backdrop-blur-2xl shadow-[0_6px_30px_-10px_rgba(46,16,101,0.09)]">
+      {/* STICKY GLASS HEADER (PURE WEBSITE — NO LOGIN / SIGN UP / ADMIN PORTAL) */}
+      <header className="sticky top-0 z-40 pt-[env(safe-area-inset-top)] border-b border-violet-200/60 bg-white/75 backdrop-blur-2xl shadow-[0_6px_30px_-10px_rgba(46,16,101,0.09)]">
         <div className="mx-auto max-w-7xl px-3 sm:px-6 min-h-16 sm:min-h-[74px] py-1.5 flex items-center justify-between gap-2 sm:gap-4">
-          {/* Left: Non-truncating Royal Logo + Wordmark */}
+          {/* Left: Non-overlapping Royal Logo + Wordmark */}
           <button
             type="button"
             onClick={() => navigateToPage('home')}
-            className="group flex items-center gap-2 sm:gap-3 min-w-0 flex-1 xl:flex-initial text-left cursor-pointer"
+            className="group flex items-center gap-2 sm:gap-3 min-w-0 flex-1 lg:flex-initial text-left cursor-pointer"
           >
-            <RoyalLogo idSuffix="nav" className="h-11 sm:h-14 w-auto shrink-0" />
-            <div className="min-w-0 h-8 sm:h-9 flex flex-col justify-between py-[1px]">
-              <div className="font-display font-extrabold text-[14px] sm:text-[18px] leading-none tracking-tight text-royal-purple whitespace-nowrap">
+            <RoyalLogo idSuffix="nav" className="h-10 sm:h-13 w-auto shrink-0" />
+            <div className="min-w-0 overflow-hidden flex flex-col justify-center">
+              <div className="font-display font-extrabold text-[13.5px] sm:text-[17px] leading-tight tracking-tight text-royal-purple truncate">
                 MAKE YOUR FLY EASY
               </div>
-              <div className="text-[8px] sm:text-[10.5px] leading-none font-semibold uppercase tracking-[0.1em] text-[#5B5480] whitespace-nowrap">
+              <div className="text-[8.5px] sm:text-[10px] leading-tight font-semibold uppercase tracking-[0.08em] text-[#5B5480] truncate mt-0.5">
                 Custom Apps · ERPs · Websites · Smart Tools
               </div>
             </div>
@@ -857,27 +839,12 @@ export function App() {
             </button>
           </nav>
 
-          {/* Right Actions: Light/Dark Frosted Glass Toggle + Ready ERPs + Mobile Menu */}
+          {/* Right Actions: Ready ERPs (Desktop lg+) + Mobile/Tablet Menu */}
           <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
-              onClick={() => setThemeMode((prev) => (prev === 'dark' ? 'light' : 'dark'))}
-              aria-label={themeMode === 'dark' ? 'Switch to Light Glass Theme' : 'Switch to Dark Glass Theme'}
-              title={themeMode === 'dark' ? 'Switch to Light Glass Theme' : 'Switch to Dark Glass Theme'}
-              className="btn-standard-glass rounded-xl px-2.5 sm:px-3 py-2 text-xs"
-            >
-              {themeMode === 'dark' ? (
-                <Sun className="w-4 h-4 text-amber-400" />
-              ) : (
-                <Moon className="w-4 h-4 text-violet-700" />
-              )}
-              <span className="hidden xl:inline">{themeMode === 'dark' ? 'Light' : 'Dark'}</span>
-            </button>
-
-            <button
-              type="button"
               onClick={() => navigateToPage('ready-erps')}
-              className={`hidden md:inline-flex ${
+              className={`hidden lg:inline-flex ${
                 activePage === 'ready-erps' ? 'btn-standard-primary' : 'btn-standard-glass'
               } rounded-xl px-4 py-2 text-xs`}
             >
@@ -902,7 +869,7 @@ export function App() {
 
         {/* Mobile / Tablet Dropdown Glass Drawer */}
         {mobileMenuOpen && (
-          <div className="lg:hidden border-t border-violet-200/60 bg-white/92 dark:bg-[#15102C]/95 backdrop-blur-2xl px-4 py-4 space-y-2.5">
+          <div className="lg:hidden border-t border-violet-200/60 bg-white/92 backdrop-blur-2xl px-4 py-4 space-y-2.5">
             <div className="grid grid-cols-2 gap-2 text-xs font-semibold text-[#2E2759]">
               <button
                 type="button"
@@ -1259,7 +1226,7 @@ export function App() {
                 <div className="rounded-2xl border border-violet-200/70 overflow-hidden">
                   <table className="glass-table text-left">
                     <thead>
-                      <tr className="border-b border-violet-200/70 bg-violet-100/50 dark:bg-violet-900/35 text-[11px] font-extrabold uppercase tracking-wider text-violet-800">
+                      <tr className="border-b border-violet-200/70 bg-violet-100/50 text-[11px] font-extrabold uppercase tracking-wider text-violet-800">
                         <th className="px-3 sm:px-5 py-3 w-[34%]">Software Suite</th>
                         <th className="px-3 sm:px-5 py-3 w-[44%]">Core Operational Scope</th>
                         <th className="px-3 sm:px-5 py-3 w-[22%] text-right">Explore</th>
@@ -1852,7 +1819,7 @@ export function App() {
                     </div>
 
                     {archivedInquiries.length > 0 && (
-                      <div className="rounded-xl border border-violet-200/70 bg-violet-50/70 dark:bg-violet-950/35 px-3.5 py-2.5 flex flex-wrap items-center justify-between gap-2">
+                      <div className="rounded-xl border border-violet-200/70 bg-violet-50/70 px-3.5 py-2.5 flex flex-wrap items-center justify-between gap-2">
                         <span className="text-[11px] font-semibold text-[#362F5A]">
                           {archivedInquiries.length} submitted inquiry record(s) backed up on this device
                         </span>
@@ -1938,7 +1905,7 @@ export function App() {
       </main>
 
       {/* EXECUTIVE MULTI-PAGE CORPORATE FOOTER */}
-      <footer className="relative z-10 border-t border-violet-200/60 bg-white/75 dark:bg-[#130E26]/85 backdrop-blur-2xl">
+      <footer className="relative z-10 border-t border-violet-200/60 bg-white/75 backdrop-blur-2xl">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 space-y-6">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
             <div className="flex items-center gap-3">
@@ -2063,7 +2030,7 @@ export function App() {
       {/* READY SUITE OVERVIEW MODAL (WHAT IT DOES · HOW IT WORKS · BENEFITS) */}
       {(spotlightSuite || spotlightProduct) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#1E1B4B]/40 backdrop-blur-md">
-          <div className="glass-surface glass-modal-card w-full max-w-2xl rounded-3xl bg-white/95 dark:bg-[#130E26]/95 overflow-hidden max-h-[90vh] flex flex-col">
+          <div className="glass-surface glass-modal-card w-full max-w-2xl rounded-3xl bg-white/95 overflow-hidden max-h-[90vh] flex flex-col">
             {spotlightProduct && !spotlightSuite && (
               <ProductBannerArt
                 product={spotlightProduct}
@@ -2233,7 +2200,7 @@ export function App() {
         rel="noopener noreferrer"
         aria-label="Chat on WhatsApp"
         title="Chat on WhatsApp"
-        className="whatsapp-fab fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom))] right-5 z-40 w-14 h-14 rounded-full bg-[#25D366] hover:bg-[#1EBE5D] text-white shadow-[0_12px_30px_-4px_rgba(37,211,102,0.58)] ring-4 ring-white/90 dark:ring-[#1F1540] flex items-center justify-center transition-all duration-200 hover:-translate-y-1 hover:scale-105 active:scale-95"
+        className="whatsapp-fab fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom))] right-5 z-40 w-14 h-14 rounded-full bg-[#25D366] hover:bg-[#1EBE5D] text-white shadow-[0_12px_30px_-4px_rgba(37,211,102,0.58)] ring-4 ring-white/90 flex items-center justify-center transition-all duration-200 hover:-translate-y-1 hover:scale-105 active:scale-95"
       >
         <svg
           viewBox="0 0 24 24"
