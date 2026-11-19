@@ -132,16 +132,16 @@ export const OurAppsSection: React.FC<OurAppsSectionProps> = ({
   onBookDemo,
 }) => {
   return (
-    <div id={id} className="space-y-6">
+    <div id={id} className="space-y-8">
       <div className="max-w-2xl mx-auto text-center">
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-violet-700">
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-violet-700">
           Our Apps
         </p>
-        <h2 className="section-fluid-heading font-extrabold text-[#141129] mt-1.5">
+        <h2 className="section-fluid-heading font-extrabold text-[#17122E] mt-1.5">
           Dedicated Flagship Applications
         </h2>
-        <p className="body-fluid-copy text-[#47416A] mt-2">
-          Purpose-built cross-platform applications currently under active construction—official
+        <p className="body-fluid-copy text-[#47416A] mt-2.5">
+          Purpose-built cross-platform applications currently under active development—official
           Google Play, App Store, and Microsoft Store links launching soon.
         </p>
       </div>
@@ -150,21 +150,21 @@ export const OurAppsSection: React.FC<OurAppsSectionProps> = ({
         {OUR_APPS.map((app) => (
           <article
             key={app.id}
-            className="glass-surface rounded-3xl p-5 sm:p-6 flex flex-col justify-between hover:-translate-y-0.5 transition-transform duration-200"
+            className="glass-surface rounded-3xl p-6 sm:p-7 flex flex-col justify-between hover:-translate-y-0.5 transition-transform duration-200"
           >
             <div className="space-y-4">
               <div className="flex items-center justify-between gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-violet-100/80 border border-violet-200 flex items-center justify-center shrink-0">
+                <div className="w-12 h-12 rounded-2xl bg-[#F4F0FF] border border-violet-200/80 flex items-center justify-center shrink-0">
                   {app.icon}
                 </div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-violet-700 text-right break-words">
+                <span className="text-xs font-semibold text-[#5C5482] text-right break-words">
                   {app.suiteLabel}
                 </span>
               </div>
 
-              <div>
+              <div className="space-y-1.5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h3 className="text-xl sm:text-2xl font-extrabold text-[#141129] tracking-tight break-words">
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-[#17122E] tracking-tight break-words">
                     {app.title}
                   </h3>
                   {app.websiteUrl && app.websiteLabel && (
@@ -172,7 +172,7 @@ export const OurAppsSection: React.FC<OurAppsSectionProps> = ({
                       href={app.websiteUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs font-bold text-violet-700 hover:underline"
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-violet-700 hover:text-violet-900 hover:underline"
                     >
                       <Globe className="w-3.5 h-3.5" />
                       {app.websiteLabel}
@@ -181,41 +181,43 @@ export const OurAppsSection: React.FC<OurAppsSectionProps> = ({
                   )}
                 </div>
                 {app.subtitle && (
-                  <p className="text-xs sm:text-[13px] font-semibold text-[#3B3561] mt-1">
+                  <p className="text-[13.5px] font-semibold text-[#372F5C]">
                     {app.subtitle}
                   </p>
                 )}
                 {app.platforms && (
-                  <p className="text-[11px] font-medium text-[#5B5480] mt-1.5 break-words">
+                  <p className="text-xs font-medium text-[#5C5482] break-words">
                     {app.platforms}
                   </p>
                 )}
                 {app.releaseNote && (
-                  <p className="text-[11px] font-bold text-violet-800 mt-1">{app.releaseNote}</p>
+                  <p className="text-xs font-semibold text-violet-800 pt-0.5">
+                    {app.releaseNote}
+                  </p>
                 )}
               </div>
 
-              <div className="glass-inner-tile rounded-2xl p-3.5 space-y-1">
+              <div className="glass-inner-tile rounded-2xl p-4 space-y-1">
                 <div className="text-[11px] font-extrabold uppercase tracking-wider text-violet-700">
                   What It Does
                 </div>
-                <p className="text-xs leading-relaxed text-[#47416A]">{app.whatItDoes}</p>
+                <p className="text-[13px] leading-relaxed text-[#47416A]">{app.whatItDoes}</p>
               </div>
 
-              <div className="glass-inner-tile rounded-2xl p-3.5 space-y-1">
+              <div className="glass-inner-tile rounded-2xl p-4 space-y-1">
                 <div className="text-[11px] font-extrabold uppercase tracking-wider text-violet-700">
                   How It Works
                 </div>
-                <p className="text-xs leading-relaxed text-[#47416A]">{app.howItWorks}</p>
+                <p className="text-[13px] leading-relaxed text-[#47416A]">{app.howItWorks}</p>
               </div>
 
               <div className="space-y-2 pt-1">
                 <div className="text-[11px] font-extrabold uppercase tracking-wider text-violet-700">
                   Key Features &amp; Benefits
                 </div>
-                <ul className="space-y-1.5 text-xs text-[#2E2759]">
+                <ul className="space-y-2 text-[13px] text-[#2E2759]">
                   {app.benefits.map((benefit) => (
-                    <li key={benefit} className="flex items-start gap-2">
+                    <li key={benefit} className="flex items-start gap-2.5">
                       <Check className="w-4 h-4 text-violet-700 shrink-0 mt-0.5" />
                       <span>{benefit}</span>
                     </li>
@@ -224,18 +226,18 @@ export const OurAppsSection: React.FC<OurAppsSectionProps> = ({
               </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-violet-200/60 flex flex-wrap gap-2.5">
+            <div className="mt-6 pt-5 border-t border-violet-200/60 flex flex-wrap gap-2.5">
               <button
                 type="button"
                 onClick={() => onInspectApp(app)}
-                className="btn-standard-primary rounded-xl px-4 py-2.5 text-xs flex-1 min-w-[160px]"
+                className="btn-standard-primary rounded-xl px-5 py-2.5 text-xs sm:text-[13px] flex-1 min-w-[165px]"
               >
                 Explore Full Features
               </button>
               <button
                 type="button"
                 onClick={() => onBookDemo(app.title)}
-                className="btn-standard-glass rounded-xl px-4 py-2.5 text-xs min-w-[140px]"
+                className="btn-standard-glass rounded-xl px-5 py-2.5 text-xs sm:text-[13px] min-w-[155px]"
               >
                 Request Early Access
               </button>

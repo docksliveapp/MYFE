@@ -3,6 +3,7 @@ import {
   AlertCircle,
   ArrowLeft,
   ArrowRight,
+  ArrowUp,
   Bot,
   Briefcase,
   Calculator,
@@ -36,8 +37,9 @@ import {
 } from 'lucide-react';
 import { RoyalLogo } from './components/RoyalLogo';
 import { LegalSecurityModal, LegalTab } from './components/LegalSecurityModal';
-import { OurClientsSection } from './components/OurClientsSection';
-import { FlagshipAppItem, OurAppsSection } from './components/OurAppsSection';
+import { OUR_CLIENTS, OurClientsSection } from './components/OurClientsSection';
+import { FlagshipAppItem, OUR_APPS, OurAppsSection } from './components/OurAppsSection';
+import { BusinessToolsSection, ToolTab } from './components/BusinessToolsSection';
 import {
   loadProductsFromStorage,
   saveProductsToStorage,
@@ -69,6 +71,7 @@ type SitePage =
   | 'our-clients'
   | 'ready-erps'
   | 'capabilities'
+  | 'tools'
   | 'about'
   | 'contact';
 
@@ -159,6 +162,7 @@ function resolvePageFromUrl(): SitePage {
   if (key === 'our-clients' || key === 'clients') return 'our-clients';
   if (key === 'ready-erps' || key === 'ready-softwares') return 'ready-erps';
   if (key === 'capabilities' || key === 'what-we-build') return 'capabilities';
+  if (key === 'tools' || key === 'business-tools') return 'tools';
   if (key === 'about' || key === 'about-skills') return 'about';
   if (key === 'contact' || key === 'contact-us') return 'contact';
   return 'home';
@@ -228,8 +232,18 @@ const READY_SUITES: ReadySuiteGuide[] = [
   },
 ];
 
+type CapabilityGroup = 'all' | 'web' | 'operations' | 'automation';
+
+const CAPABILITY_FILTER_TABS: { id: CapabilityGroup; label: string }[] = [
+  { id: 'all', label: 'All Solutions' },
+  { id: 'web', label: 'Web & Commerce' },
+  { id: 'operations', label: 'Operations & Finance' },
+  { id: 'automation', label: 'Smart Automation' },
+];
+
 interface BuildCapability {
   num: string;
+  group: Exclude<CapabilityGroup, 'all'>;
   title: string;
   category: string;
   whatItDoes: string;
@@ -241,6 +255,7 @@ interface BuildCapability {
 const BUILD_CAPABILITIES: BuildCapability[] = [
   {
     num: '01',
+    group: 'web',
     title: 'Business Websites & Interactive Portals',
     category: 'Websites & Online Presence',
     whatItDoes:
@@ -255,6 +270,7 @@ const BUILD_CAPABILITIES: BuildCapability[] = [
   },
   {
     num: '02',
+    group: 'web',
     title: 'Multi-Vendor Online Marketplace',
     category: 'Online Shopping & Sellers',
     whatItDoes:
@@ -269,6 +285,7 @@ const BUILD_CAPABILITIES: BuildCapability[] = [
   },
   {
     num: '03',
+    group: 'web',
     title: 'Branded Retail Online Store',
     category: 'Direct Business Sales',
     whatItDoes:
@@ -283,6 +300,7 @@ const BUILD_CAPABILITIES: BuildCapability[] = [
   },
   {
     num: '04',
+    group: 'web',
     title: 'On-Demand Food & Parcel Delivery',
     category: 'Delivery & Riders',
     whatItDoes:
@@ -297,6 +315,7 @@ const BUILD_CAPABILITIES: BuildCapability[] = [
   },
   {
     num: '05',
+    group: 'operations',
     title: 'Custom Dashboards, CRM & Office Portals',
     category: 'Industry & Team Apps',
     whatItDoes:
@@ -311,6 +330,7 @@ const BUILD_CAPABILITIES: BuildCapability[] = [
   },
   {
     num: '06',
+    group: 'operations',
     title: 'Custom Company Accounting & Billing',
     category: 'Finance & Accounts',
     whatItDoes:
@@ -325,6 +345,7 @@ const BUILD_CAPABILITIES: BuildCapability[] = [
   },
   {
     num: '07',
+    group: 'operations',
     title: 'Live Vehicle & Fleet Tracking',
     category: 'Transport & Cargo',
     whatItDoes:
@@ -339,6 +360,7 @@ const BUILD_CAPABILITIES: BuildCapability[] = [
   },
   {
     num: '08',
+    group: 'automation',
     title: 'Smart Document, Invoice & Photo Reader',
     category: 'Paperless Office Work',
     whatItDoes:
@@ -353,6 +375,7 @@ const BUILD_CAPABILITIES: BuildCapability[] = [
   },
   {
     num: '09',
+    group: 'automation',
     title: '24/7 Smart Customer & Sales Assistant',
     category: 'Automated Client Care',
     whatItDoes:
@@ -367,6 +390,7 @@ const BUILD_CAPABILITIES: BuildCapability[] = [
   },
   {
     num: '10',
+    group: 'automation',
     title: 'Company Knowledge Search & Report Writer',
     category: 'Smart Office Intelligence',
     whatItDoes:
@@ -381,6 +405,7 @@ const BUILD_CAPABILITIES: BuildCapability[] = [
   },
   {
     num: '11',
+    group: 'automation',
     title: 'Voice Notes, Meeting Summaries & Audio Tools',
     category: 'Voice & Multilingual Work',
     whatItDoes:
@@ -395,6 +420,7 @@ const BUILD_CAPABILITIES: BuildCapability[] = [
   },
   {
     num: '12',
+    group: 'automation',
     title: 'Legal Drafting, Marketing Copy & Brand Visuals',
     category: 'Documents & Creative Studio',
     whatItDoes:
@@ -466,6 +492,9 @@ export function App() {
   const [products, setProducts] = useState<StoreAppProduct[]>(() => loadProductsFromStorage());
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
+  const [capabilityFilter, setCapabilityFilter] = useState<CapabilityGroup>('all');
+  const [selectedToolTab, setSelectedToolTab] = useState<ToolTab>('estimator');
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   // ERP Details & Legal Spotlight modals
   const [spotlightProduct, setSpotlightProduct] = useState<StoreAppProduct | null>(null);
@@ -599,6 +628,45 @@ export function App() {
     return () => window.removeEventListener('pointermove', handlePointerMove);
   }, []);
 
+  // Floating scroll-to-top visibility listener
+  useEffect(() => {
+    const onScroll = () => {
+      setShowScrollTop(window.scrollY > 360);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Escape key & body scroll lock for Suite / Product overview modal
+  const isSpotlightOpen = Boolean(spotlightSuite || spotlightProduct);
+  useEffect(() => {
+    if (!isSpotlightOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSpotlightSuite(null);
+        setSpotlightProduct(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isSpotlightOpen]);
+
+  // Escape key close for mobile navigation drawer
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileMenuOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [mobileMenuOpen]);
+
   const navigateToPage = (page: SitePage) => {
     setMobileMenuOpen(false);
     setActivePage(page);
@@ -718,8 +786,13 @@ export function App() {
     }
   };
 
+  const filteredCapabilities =
+    capabilityFilter === 'all'
+      ? BUILD_CAPABILITIES
+      : BUILD_CAPABILITIES.filter((cap) => cap.group === capabilityFilter);
+
   return (
-    <div className="min-h-screen pearl-purple-canvas relative text-[#141129] selection:bg-violet-600/20 selection:text-violet-950">
+    <div className="min-h-screen pearl-purple-canvas relative text-[#17122E] selection:bg-violet-600/20 selection:text-violet-950">
       {/* Ambient Lavender & Royal Purple Refraction Orbs Behind Glass */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden z-0" aria-hidden="true">
         <div
@@ -739,38 +812,41 @@ export function App() {
 
       {/* Floating Toast Notification */}
       {toast && (
-        <div className="fixed bottom-24 right-5 z-50 max-w-sm glass-surface rounded-2xl px-4 py-3 flex items-center gap-3 shadow-xl border border-violet-300/70">
+        <div
+          role="status"
+          aria-live="polite"
+          className={`fixed right-5 z-50 max-w-sm glass-surface rounded-2xl px-4 py-3 flex items-center gap-3 shadow-xl border border-violet-300/75 transition-all ${
+            showScrollTop
+              ? 'bottom-[calc(8.75rem+env(safe-area-inset-bottom))]'
+              : 'bottom-[calc(5.5rem+env(safe-area-inset-bottom))]'
+          }`}
+        >
           {toast.type === 'error' ? (
             <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
           ) : (
             <CheckCircle2 className="w-5 h-5 text-violet-700 shrink-0" />
           )}
-          <p className="text-xs sm:text-sm font-semibold text-[#1E1B4B]">{toast.text}</p>
+          <p className="text-xs sm:text-sm font-semibold text-[#17122E]">{toast.text}</p>
         </div>
       )}
 
-      {/* STICKY GLASS HEADER (PURE WEBSITE — NO LOGIN / SIGN UP / ADMIN PORTAL) */}
-      <header className="sticky top-0 z-40 pt-[env(safe-area-inset-top)] border-b border-violet-200/60 bg-white/75 backdrop-blur-2xl shadow-[0_6px_30px_-10px_rgba(46,16,101,0.09)]">
-        <div className="mx-auto max-w-7xl px-3 sm:px-6 min-h-16 sm:min-h-[74px] py-1.5 flex items-center justify-between gap-2 sm:gap-4">
-          {/* Left: Non-overlapping Royal Logo + Wordmark */}
+      {/* STICKY GLASS HEADER */}
+      <header className="sticky top-0 z-40 pt-[env(safe-area-inset-top)] border-b border-violet-200/65 bg-white/80 backdrop-blur-2xl shadow-[0_6px_28px_-10px_rgba(46,16,101,0.09)]">
+        <div className="mx-auto max-w-7xl px-3.5 sm:px-6 min-h-16 sm:min-h-[72px] py-1.5 flex items-center justify-between gap-3 sm:gap-4">
+          {/* Left: Crisp Royal Logo + Single-Line Wordmark */}
           <button
             type="button"
             onClick={() => navigateToPage('home')}
-            className="group flex items-center gap-2 sm:gap-3 min-w-0 flex-1 lg:flex-initial text-left cursor-pointer"
+            className="group flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 lg:flex-initial text-left cursor-pointer"
           >
-            <RoyalLogo idSuffix="nav" className="h-10 sm:h-13 w-auto shrink-0" />
-            <div className="min-w-0 overflow-hidden flex flex-col justify-center">
-              <div className="font-display font-extrabold text-[13.5px] sm:text-[17px] leading-tight tracking-tight text-royal-purple truncate">
-                MAKE YOUR FLY EASY
-              </div>
-              <div className="text-[8.5px] sm:text-[10px] leading-tight font-semibold uppercase tracking-[0.08em] text-[#5B5480] truncate mt-0.5">
-                Custom Apps · ERPs · Websites · Smart Tools
-              </div>
-            </div>
+            <RoyalLogo idSuffix="nav" className="h-10 sm:h-12 w-auto shrink-0" />
+            <span className="font-display font-extrabold text-[14px] sm:text-[17px] leading-none tracking-tight text-royal-purple truncate">
+              MAKE YOUR FLY EASY
+            </span>
           </button>
 
-          {/* Center Nav Links — Home, Our Apps, Our Clients, Capabilities, About, Contact Us */}
-          <nav className="hidden lg:flex items-center gap-4 xl:gap-6 text-[13px] xl:text-[13.5px] font-semibold text-[#3B3561]">
+          {/* Center Nav Links — Home, Our Apps, Our Clients, Capabilities, Tools, About, Contact Us */}
+          <nav className="hidden lg:flex items-center gap-3.5 xl:gap-5 text-[13px] xl:text-[13.5px] font-semibold text-[#3B3561]">
             <button
               type="button"
               onClick={() => navigateToPage('home')}
@@ -817,6 +893,17 @@ export function App() {
             </button>
             <button
               type="button"
+              onClick={() => navigateToPage('tools')}
+              className={`pb-0.5 transition-colors whitespace-nowrap cursor-pointer border-b-2 ${
+                activePage === 'tools'
+                  ? 'text-violet-700 font-bold border-violet-600'
+                  : 'border-transparent hover:text-violet-700'
+              }`}
+            >
+              Tools
+            </button>
+            <button
+              type="button"
               onClick={() => navigateToPage('about')}
               className={`pb-0.5 transition-colors whitespace-nowrap cursor-pointer border-b-2 ${
                 activePage === 'about'
@@ -860,6 +947,7 @@ export function App() {
               type="button"
               onClick={() => setMobileMenuOpen((v) => !v)}
               aria-label="Toggle Menu"
+              aria-expanded={mobileMenuOpen}
               className="lg:hidden btn-standard-glass rounded-xl p-2 shrink-0"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -913,6 +1001,16 @@ export function App() {
               </button>
               <button
                 type="button"
+                onClick={() => navigateToPage('tools')}
+                className={`glass-inner-tile min-h-[44px] rounded-xl px-3 py-2.5 flex items-center justify-between text-left ${
+                  activePage === 'tools' ? 'font-bold text-violet-800 border-violet-400' : ''
+                }`}
+              >
+                Business Tools
+                <ChevronRight className="w-3.5 h-3.5 text-violet-600" />
+              </button>
+              <button
+                type="button"
                 onClick={() => navigateToPage('about')}
                 className={`glass-inner-tile min-h-[44px] rounded-xl px-3 py-2.5 flex items-center justify-between text-left ${
                   activePage === 'about' ? 'font-bold text-violet-800 border-violet-400' : ''
@@ -924,7 +1022,7 @@ export function App() {
               <button
                 type="button"
                 onClick={() => navigateToPage('contact')}
-                className={`glass-inner-tile min-h-[44px] rounded-xl px-3 py-2.5 flex items-center justify-between text-left ${
+                className={`col-span-2 glass-inner-tile min-h-[44px] rounded-xl px-3 py-2.5 flex items-center justify-between text-left ${
                   activePage === 'contact' ? 'font-bold text-violet-800 border-violet-400' : ''
                 }`}
               >
@@ -948,11 +1046,11 @@ export function App() {
       </header>
 
       <main className="relative z-10 min-h-[70vh]">
-        {/* PAGE 1: HOME — CLEAN EXECUTIVE INTRODUCTION ONLY */}
+        {/* PAGE 1: HOME — EXECUTIVE INTRODUCTION + FLAGSHIP APPS & CLIENTS PREVIEW */}
         {activePage === 'home' && (
           <section
             id="home"
-            className="page-enter mx-auto max-w-5xl px-4 sm:px-6 pt-10 sm:pt-16 pb-14 sm:pb-20"
+            className="page-enter mx-auto max-w-6xl px-4 sm:px-6 pt-8 sm:pt-14 pb-16 sm:pb-20 space-y-8 sm:space-y-10"
           >
             <div className="glass-surface rounded-[2rem] px-6 py-10 sm:px-14 sm:py-16 text-center flex flex-col items-center">
               {/* Top Centered Large Official Logo */}
@@ -975,7 +1073,7 @@ export function App() {
 
               {/* Full Company Introduction Below Company Name */}
               <div className="max-w-3xl space-y-4">
-                <h2 className="text-xl sm:text-3xl font-extrabold text-[#141129] leading-snug">
+                <h2 className="text-xl sm:text-3xl font-extrabold text-[#17122E] leading-snug">
                   Everything Your Business Needs Digitally —{' '}
                   <span className="text-royal-purple">Engineered Under One Roof</span>
                 </h2>
@@ -984,11 +1082,11 @@ export function App() {
                   Make Your Fly Easy is a Karachi-based software house and digital automation studio
                   delivering end-to-end technology solutions—from ready-to-deploy industry platforms
                   for{' '}
-                  <strong className="text-[#1E1B4B]">
+                  <strong className="text-[#17122E]">
                     Pakistan Customs Clearing Agents, Bonded Carriers, TIR &amp; Afghan Transit
                     Trade (ATT), Advocates &amp; Law Chambers,
                   </strong>{' '}
-                  and <strong className="text-[#1E1B4B]">Universal Business Finance</strong> to
+                  and <strong className="text-[#17122E]">Universal Business Finance</strong> to
                   high-scale websites, mobile-friendly apps, and online marketplaces.
                 </p>
 
@@ -1030,7 +1128,7 @@ export function App() {
               </div>
 
               {/* Clean 4-Metric Proof Strip */}
-              <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-3 pt-9">
+              <div className="w-full max-w-4xl grid grid-cols-2 sm:grid-cols-4 gap-3 pt-9">
                 {[
                   { label: 'Ready Flagship ERPs', val: '3 Suites' },
                   { label: 'Custom Solutions', val: '12+ Categories' },
@@ -1044,10 +1142,175 @@ export function App() {
                     <div className="font-display text-base sm:text-lg font-extrabold text-royal-purple tabular-nums">
                       {stat.val}
                     </div>
-                    <div className="text-[11px] font-medium text-[#5B5480] mt-0.5">
+                    <div className="text-[11.5px] font-medium text-[#554E79] mt-0.5">
                       {stat.label}
                     </div>
                   </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Flagship Apps Quick Preview */}
+            <div className="glass-surface rounded-[2rem] p-6 sm:p-8 space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-violet-700">
+                    Flagship Products
+                  </p>
+                  <h2 className="text-xl sm:text-2xl font-extrabold text-[#17122E] mt-1">
+                    Our Apps Under Active Release
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigateToPage('our-apps')}
+                  className="btn-standard-soft rounded-xl px-4 py-2 text-xs self-start sm:self-auto"
+                >
+                  Explore Our Apps
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+                {OUR_APPS.map((app) => (
+                  <article
+                    key={app.id}
+                    className="glass-inner-tile rounded-2xl p-5 flex flex-col justify-between gap-4 hover:-translate-y-0.5 transition-transform duration-200"
+                  >
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-violet-100/85 border border-violet-200 flex items-center justify-center shrink-0">
+                          {app.icon}
+                        </div>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-violet-700 text-right">
+                          {app.suiteLabel}
+                        </span>
+                      </div>
+                      <h3 className="text-base sm:text-lg font-extrabold text-[#17122E] leading-snug">
+                        {app.title}
+                      </h3>
+                      <p className="text-[13px] leading-relaxed text-[#47416A] line-clamp-3">
+                        {app.whatItDoes}
+                      </p>
+                    </div>
+
+                    <div className="pt-3 border-t border-violet-200/60 flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-[11px] font-semibold text-violet-800">
+                        Store links publishing soon
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setSpotlightSuite(app)}
+                        className="btn-standard-soft rounded-lg px-3.5 py-1.5 text-xs"
+                      >
+                        Inspect Overview
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+
+            {/* Enterprise Clients Trust Strip */}
+            <div className="glass-surface rounded-[2rem] p-6 sm:p-8 space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-violet-700">
+                    Trusted By Industry Leaders
+                  </p>
+                  <h2 className="text-xl sm:text-2xl font-extrabold text-[#17122E] mt-1">
+                    Our Enterprise Clients
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigateToPage('our-clients')}
+                  className="btn-standard-soft rounded-xl px-4 py-2 text-xs self-start sm:self-auto"
+                >
+                  View Client Directory
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {OUR_CLIENTS.map((client, idx) => (
+                  <div
+                    key={client.name}
+                    className="glass-inner-tile rounded-xl px-4 py-3 flex items-center gap-3"
+                  >
+                    <span className="font-mono text-xs font-extrabold text-violet-700 tabular-nums shrink-0">
+                      {String(idx + 1).padStart(2, '0')}
+                    </span>
+                    <div className="min-w-0">
+                      <div className="text-[13px] font-extrabold text-[#17122E] truncate">
+                        {client.name}
+                      </div>
+                      <div className="text-[11px] font-medium text-[#5B5480] truncate">
+                        {client.sector}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Free Interactive Business Tools Preview */}
+            <div className="glass-surface rounded-[2rem] p-6 sm:p-8 space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-violet-700">
+                    Interactive Business Utilities
+                  </p>
+                  <h2 className="text-xl sm:text-2xl font-extrabold text-[#17122E] mt-1">
+                    Free Everyday Tools For Your Office
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigateToPage('tools')}
+                  className="btn-standard-primary rounded-xl px-5 py-2.5 text-xs self-start sm:self-auto"
+                >
+                  Open Business Tools
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                {[
+                  {
+                    tab: 'estimator' as ToolTab,
+                    title: 'Project Scope Estimator',
+                    desc: 'Plan software delivery timelines and modules before booking a build.',
+                  },
+                  {
+                    tab: 'invoice' as ToolTab,
+                    title: 'Invoice & Quote Builder',
+                    desc: 'Generate clean, print-ready PDF quotations and invoices in seconds.',
+                  },
+                  {
+                    tab: 'cbm' as ToolTab,
+                    title: 'CBM Cargo Planner',
+                    desc: 'Compute shipment CBM, air volumetric weight, and container utilization.',
+                  },
+                  {
+                    tab: 'margin' as ToolTab,
+                    title: 'Margin & GST Calculator',
+                    desc: 'Check unit profit margin, markup ratio, and tax-inclusive pricing.',
+                  },
+                ].map((tool) => (
+                  <button
+                    key={tool.title}
+                    type="button"
+                    onClick={() => {
+                      setSelectedToolTab(tool.tab);
+                      navigateToPage('tools');
+                    }}
+                    className="glass-inner-tile rounded-2xl p-4 text-left hover:-translate-y-0.5 transition-transform cursor-pointer space-y-1.5"
+                  >
+                    <div className="text-sm font-extrabold text-[#17122E]">{tool.title}</div>
+                    <p className="text-xs leading-relaxed text-[#47416A]">{tool.desc}</p>
+                  </button>
                 ))}
               </div>
             </div>
@@ -1098,6 +1361,36 @@ export function App() {
           </section>
         )}
 
+        {/* PAGE: BUSINESS TOOLS (INTERACTIVE UTILITIES SUITE) */}
+        {activePage === 'tools' && (
+          <section
+            id="tools"
+            className="page-enter mx-auto max-w-7xl px-4 sm:px-6 pt-8 sm:pt-12 pb-16 sm:pb-20 space-y-6"
+          >
+            <div className="no-print">
+              <button
+                type="button"
+                onClick={() => navigateToPage('home')}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-violet-700 hover:underline cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                Back to Home
+              </button>
+            </div>
+            <BusinessToolsSection
+              initialTool={selectedToolTab}
+              onSendScopeToContact={(interest, brief) => {
+                setContactInterest(interest);
+                setContactMessage(brief);
+                navigateToPage('contact');
+                showToast(`Loaded estimated scope for "${interest}" into Contact Desk.`, 'info');
+              }}
+              onShareWhatsApp={(message) => openExternalSafely(buildWhatsAppUrl(message))}
+              onNotify={(text, type) => showToast(text, type)}
+            />
+          </section>
+        )}
+
         {/* PAGE 2: READY ERPs PAGE */}
         {activePage === 'ready-erps' && (
           <section
@@ -1117,7 +1410,7 @@ export function App() {
                 <p className="text-xs font-bold uppercase tracking-[0.14em] text-violet-700">
                   Ready Business Solutions
                 </p>
-                <h1 className="section-fluid-heading font-extrabold text-[#141129] mt-1">
+                <h1 className="section-fluid-heading font-extrabold text-[#17122E] mt-1">
                   What Our Ready ERPs Do &amp; How They Help You
                 </h1>
                 <p className="body-fluid-copy text-[#47416A] mt-2">
@@ -1140,7 +1433,7 @@ export function App() {
                 {READY_SUITES.map((suite) => (
                   <article
                     key={suite.id}
-                    className="glass-surface rounded-3xl p-6 flex flex-col justify-between hover:-translate-y-0.5 transition-transform duration-200"
+                    className="glass-surface rounded-3xl p-6 sm:p-7 flex flex-col justify-between hover:-translate-y-0.5 transition-transform duration-200"
                   >
                     <div className="space-y-4">
                       <div className="flex items-center justify-between gap-3">
@@ -1152,22 +1445,22 @@ export function App() {
                         </span>
                       </div>
 
-                      <h3 className="card-fluid-title text-[#141129]">{suite.title}</h3>
+                      <h3 className="card-fluid-title text-[#17122E]">{suite.title}</h3>
 
-                      <div className="glass-inner-tile rounded-2xl p-3.5 space-y-1">
+                      <div className="glass-inner-tile rounded-2xl p-4 space-y-1">
                         <div className="text-[11px] font-extrabold uppercase tracking-wider text-violet-700">
                           What It Does
                         </div>
-                        <p className="text-xs leading-relaxed text-[#47416A]">
+                        <p className="text-[13px] leading-relaxed text-[#47416A]">
                           {suite.whatItDoes}
                         </p>
                       </div>
 
-                      <div className="glass-inner-tile rounded-2xl p-3.5 space-y-1">
+                      <div className="glass-inner-tile rounded-2xl p-4 space-y-1">
                         <div className="text-[11px] font-extrabold uppercase tracking-wider text-violet-700">
                           How It Works
                         </div>
-                        <p className="text-xs leading-relaxed text-[#47416A]">
+                        <p className="text-[13px] leading-relaxed text-[#47416A]">
                           {suite.howItWorks}
                         </p>
                       </div>
@@ -1176,7 +1469,7 @@ export function App() {
                         <div className="text-[11px] font-extrabold uppercase tracking-wider text-violet-700">
                           Key Benefits
                         </div>
-                        <ul className="space-y-1.5 text-xs text-[#2E2759]">
+                        <ul className="space-y-2 text-[13px] text-[#2E2759]">
                           {suite.benefits.map((benefit) => (
                             <li key={benefit} className="flex items-start gap-2">
                               <Check className="w-4 h-4 text-violet-700 shrink-0 mt-0.5" />
@@ -1187,7 +1480,7 @@ export function App() {
                       </div>
                     </div>
 
-                    <div className="mt-6 pt-4 border-t border-violet-200/60 flex flex-wrap gap-2">
+                    <div className="mt-6 pt-4 border-t border-violet-200/60 flex flex-wrap gap-2.5">
                       <button
                         type="button"
                         onClick={() => setSpotlightSuite(suite)}
@@ -1198,7 +1491,7 @@ export function App() {
                       <button
                         type="button"
                         onClick={() => handleRequestCustomBuild(suite.title)}
-                        className="btn-standard-glass rounded-xl px-3.5 py-2.5 text-xs"
+                        className="btn-standard-glass rounded-xl px-4 py-2.5 text-xs"
                       >
                         Book Demo
                       </button>
@@ -1214,7 +1507,7 @@ export function App() {
                     <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-violet-700">
                       Side-by-Side Overview
                     </p>
-                    <h2 className="text-lg sm:text-xl font-extrabold text-[#141129] mt-0.5">
+                    <h2 className="text-lg sm:text-xl font-extrabold text-[#17122E] mt-0.5">
                       Ready ERP Suite Comparison Matrix
                     </h2>
                   </div>
@@ -1239,8 +1532,8 @@ export function App() {
                           onClick={() => setSpotlightSuite(suite)}
                           className="glass-table-row cursor-pointer"
                         >
-                          <td className="px-3 sm:px-5 py-3.5 font-extrabold text-[#141129]">
-                            <div className="text-[10px] font-bold uppercase tracking-wider text-violet-700 mb-0.5">
+                          <td className="px-3 sm:px-5 py-3.5 font-extrabold text-[#17122E]">
+                            <div className="text-[10.5px] font-bold uppercase tracking-wider text-violet-700 mb-0.5">
                               {suite.suiteLabel}
                             </div>
                             <span>{suite.title}</span>
@@ -1255,7 +1548,7 @@ export function App() {
                                 e.stopPropagation();
                                 setSpotlightSuite(suite);
                               }}
-                              className="btn-standard-soft rounded-lg px-2.5 sm:px-3 py-1.5 text-[11px]"
+                              className="btn-standard-soft rounded-lg px-3 py-1.5 text-xs"
                             >
                               Details
                             </button>
@@ -1285,7 +1578,7 @@ export function App() {
                 <p className="text-xs font-bold uppercase tracking-[0.14em] text-violet-700">
                   All-In-One Custom Solutions
                 </p>
-                <h1 className="section-fluid-heading font-extrabold text-[#141129] mt-1">
+                <h1 className="section-fluid-heading font-extrabold text-[#17122E] mt-1">
                   Everything Make Your Fly Easy Can Build For You
                 </h1>
                 <p className="body-fluid-copy text-[#47416A] mt-2">
@@ -1297,53 +1590,83 @@ export function App() {
               <button
                 type="button"
                 onClick={() => navigateToPage('contact')}
-                className="btn-standard-primary rounded-xl px-4 py-2.5 text-xs"
+                className="btn-standard-primary rounded-xl px-5 py-2.5 text-xs self-start md:self-auto"
               >
                 Discuss Your Requirement
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
 
+              {/* Interactive Solution Category Filters */}
+              <div
+                className="flex flex-wrap items-center justify-between gap-3 mb-6"
+                role="tablist"
+                aria-label="Filter software capabilities"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  {CAPABILITY_FILTER_TABS.map((tab) => {
+                    const isActive = capabilityFilter === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        role="tab"
+                        aria-selected={isActive}
+                        onClick={() => setCapabilityFilter(tab.id)}
+                        className={`rounded-xl px-4 py-2 text-xs transition-all ${
+                          isActive ? 'btn-standard-primary' : 'btn-standard-glass'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <span className="text-xs font-semibold text-[#5B5480] tabular-nums">
+                  Showing {filteredCapabilities.length} of {BUILD_CAPABILITIES.length} solutions
+                </span>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-                {BUILD_CAPABILITIES.map((cap) => (
+                {filteredCapabilities.map((cap) => (
                   <article
                     key={cap.num}
-                    className="glass-surface rounded-3xl p-5 flex flex-col justify-between hover:-translate-y-0.5 transition-transform duration-200"
+                    className="glass-surface rounded-3xl p-5 sm:p-6 flex flex-col justify-between hover:-translate-y-0.5 transition-transform duration-200"
                   >
-                    <div className="space-y-3">
+                    <div className="space-y-3.5">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-mono text-xs font-bold text-violet-700">
+                        <span className="font-mono text-xs font-bold text-violet-700 tabular-nums">
                           {cap.num}.
                         </span>
-                        <div className="w-9 h-9 rounded-xl bg-violet-100/80 border border-violet-200 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-violet-100/80 border border-violet-200 flex items-center justify-center">
                           {cap.icon}
                         </div>
                       </div>
                       <div>
-                        <p className="text-[11px] font-bold uppercase tracking-wider text-violet-700/80">
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-violet-700/85">
                           {cap.category}
                         </p>
-                        <h3 className="text-base font-bold text-[#141129] mt-1 leading-snug">
+                        <h3 className="text-base font-bold text-[#17122E] mt-1 leading-snug">
                           {cap.title}
                         </h3>
                       </div>
 
-                      <div className="space-y-2 text-xs leading-relaxed text-[#47416A]">
+                      <div className="space-y-2 text-[13px] leading-relaxed text-[#47416A]">
                         <p>
-                          <strong className="text-[#1E1B4B]">What it does: </strong>
+                          <strong className="text-[#17122E]">What it does: </strong>
                           {cap.whatItDoes}
                         </p>
                         <p>
-                          <strong className="text-[#1E1B4B]">How it works: </strong>
+                          <strong className="text-[#17122E]">How it works: </strong>
                           {cap.howItWorks}
                         </p>
                       </div>
 
                       <div className="pt-1 space-y-1.5">
-                        <div className="text-[10.5px] font-extrabold uppercase tracking-wider text-violet-700">
+                        <div className="text-[11px] font-extrabold uppercase tracking-wider text-violet-700">
                           Benefits
                         </div>
-                        <ul className="space-y-1.5 text-[11.5px] font-medium text-[#2E2759]">
+                        <ul className="space-y-1.5 text-[12.5px] font-medium text-[#2E2759]">
                           {cap.benefits.map((b) => (
                             <li key={b} className="flex items-start gap-1.5">
                               <Check className="w-3.5 h-3.5 text-violet-700 shrink-0 mt-0.5" />
@@ -1385,7 +1708,7 @@ export function App() {
                   <p className="text-xs font-bold uppercase tracking-[0.14em] text-violet-700">
                     About Make Your Fly Easy
                   </p>
-                  <h1 className="section-fluid-heading font-extrabold text-[#141129] mt-1.5">
+                  <h1 className="section-fluid-heading font-extrabold text-[#17122E] mt-1.5">
                     Built Around Real Office Workflows, Not Complicated Menus
                   </h1>
                   <p className="body-fluid-copy text-[#47416A] mt-3">
@@ -1416,7 +1739,7 @@ export function App() {
                     ].map((pillar) => (
                       <div
                         key={pillar.label}
-                        className="glass-inner-tile rounded-xl px-3 py-2.5 flex items-center gap-2 text-xs font-bold text-[#1E1B4B]"
+                        className="glass-inner-tile rounded-xl px-3 py-2.5 flex items-center gap-2 text-xs font-bold text-[#17122E]"
                       >
                         {pillar.icon}
                         <span>{pillar.label}</span>
@@ -1449,11 +1772,11 @@ export function App() {
                     },
                   ].map((item) => (
                     <div key={item.step} className="glass-surface rounded-3xl p-5 sm:p-6">
-                      <span className="font-mono text-xs font-extrabold text-violet-700">
+                      <span className="font-mono text-xs font-extrabold text-violet-700 tabular-nums">
                         Step {item.step}
                       </span>
-                      <h3 className="text-base font-bold text-[#141129] mt-1.5">{item.title}</h3>
-                      <p className="text-xs leading-relaxed text-[#47416A] mt-2">{item.desc}</p>
+                      <h3 className="text-base font-bold text-[#17122E] mt-1.5">{item.title}</h3>
+                      <p className="text-[13px] leading-relaxed text-[#47416A] mt-2">{item.desc}</p>
                     </div>
                   ))}
                 </div>
@@ -1466,7 +1789,7 @@ export function App() {
                 <p className="text-xs font-bold uppercase tracking-[0.14em] text-violet-700">
                   Clear Terms &amp; Client Protection
                 </p>
-                <h2 className="section-fluid-heading font-extrabold text-[#141129] mt-1.5">
+                <h2 className="section-fluid-heading font-extrabold text-[#17122E] mt-1.5">
                   Privacy Policy &amp; Terms &amp; Conditions
                 </h2>
                 <p className="body-fluid-copy text-[#47416A] mt-2">
@@ -1476,13 +1799,15 @@ export function App() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <article className="glass-surface rounded-3xl p-6 flex flex-col justify-between">
+                <article className="glass-surface rounded-3xl p-6 sm:p-7 flex flex-col justify-between">
                   <div className="space-y-3">
-                    <div className="w-10 h-10 rounded-xl bg-violet-100/80 border border-violet-200 flex items-center justify-center">
+                    <div className="w-11 h-11 rounded-xl bg-violet-100/80 border border-violet-200 flex items-center justify-center">
                       <Lock className="w-5 h-5 text-violet-700" />
                     </div>
-                    <h3 className="text-base font-extrabold text-[#141129]">Privacy Policy</h3>
-                    <p className="text-xs leading-relaxed text-[#47416A]">
+                    <h3 className="text-base sm:text-lg font-extrabold text-[#17122E]">
+                      Privacy Policy
+                    </h3>
+                    <p className="text-[13px] leading-relaxed text-[#47416A]">
                       Explains what details we collect, zero data selling, client data ownership,
                       built-in software backup responsibility, and safeguards against hacking,
                       staff leaks, theft, or government-directed restrictions.
@@ -1498,15 +1823,15 @@ export function App() {
                   </button>
                 </article>
 
-                <article className="glass-surface rounded-3xl p-6 flex flex-col justify-between">
+                <article className="glass-surface rounded-3xl p-6 sm:p-7 flex flex-col justify-between">
                   <div className="space-y-3">
-                    <div className="w-10 h-10 rounded-xl bg-violet-100/80 border border-violet-200 flex items-center justify-center">
+                    <div className="w-11 h-11 rounded-xl bg-violet-100/80 border border-violet-200 flex items-center justify-center">
                       <Scale className="w-5 h-5 text-violet-700" />
                     </div>
-                    <h3 className="text-base font-extrabold text-[#141129]">
+                    <h3 className="text-base sm:text-lg font-extrabold text-[#17122E]">
                       Terms &amp; Conditions
                     </h3>
-                    <p className="text-xs leading-relaxed text-[#47416A]">
+                    <p className="text-[13px] leading-relaxed text-[#47416A]">
                       Covers service scope, mandatory client backups using the in-software backup
                       tool (zero MYFE data-loss liability), and no liability for government bans,
                       hacking, cyber attacks, hardware theft, or employee misuse.
@@ -1768,16 +2093,21 @@ export function App() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-[#1E1B4B] mb-1.5">
-                        Project Brief / Requirements
-                      </label>
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <label className="block text-xs font-bold text-[#17122E]">
+                          Project Brief / Requirements
+                        </label>
+                        <span className="text-[11px] font-medium text-[#6B648F] tabular-nums">
+                          {contactMessage.length}/{INQUIRY_LIMITS.MESSAGE_MAX}
+                        </span>
+                      </div>
                       <textarea
-                        rows={3}
+                        rows={4}
                         value={contactMessage}
                         onChange={(e) => setContactMessage(e.target.value)}
                         maxLength={INQUIRY_LIMITS.MESSAGE_MAX}
                         placeholder="Share your business workflow, team size, or custom app requirements..."
-                        className="w-full rounded-xl bg-white/90 border border-violet-200 px-3.5 py-2.5 text-sm text-[#141129] focus:outline-none focus:border-violet-600 focus:ring-2 focus:ring-violet-500/20"
+                        className="w-full rounded-xl bg-white/92 border border-violet-200/90 px-3.5 py-2.5 text-sm text-[#17122E] focus:outline-none focus:border-violet-600 focus:ring-2 focus:ring-violet-500/20"
                       />
                     </div>
 
@@ -1860,18 +2190,13 @@ export function App() {
 
             {/* OFFICIAL SOCIAL MEDIA CHANNELS (@makeyourflyeasy) INSIDE CONTACT US */}
             <div className="glass-surface rounded-3xl p-6 sm:p-8">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-6">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-violet-700">
-                    Official Social Media · @makeyourflyeasy
-                  </p>
-                  <h2 className="text-xl sm:text-2xl font-extrabold text-[#141129] mt-1">
-                    Connect &amp; Follow Us Everywhere
-                  </h2>
-                </div>
-                <span className="inline-flex items-center gap-1.5 rounded-xl bg-violet-100/80 border border-violet-200 px-3 py-1.5 text-xs font-extrabold text-violet-800">
-                  Official Handle: @makeyourflyeasy
-                </span>
+              <div className="mb-6">
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-violet-700">
+                  Official Social Media · @makeyourflyeasy
+                </p>
+                <h2 className="text-xl sm:text-2xl font-extrabold text-[#17122E] mt-1">
+                  Connect &amp; Follow Us Everywhere
+                </h2>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
@@ -1975,6 +2300,13 @@ export function App() {
               </button>
               <button
                 type="button"
+                onClick={() => navigateToPage('tools')}
+                className="hover:text-violet-700 cursor-pointer"
+              >
+                Business Tools
+              </button>
+              <button
+                type="button"
                 onClick={() => navigateToPage('about')}
                 className="hover:text-violet-700 cursor-pointer"
               >
@@ -2027,158 +2359,190 @@ export function App() {
         </div>
       </footer>
 
-      {/* READY SUITE OVERVIEW MODAL (WHAT IT DOES · HOW IT WORKS · BENEFITS) */}
+      {/* READY SUITE & FLAGSHIP APP OVERVIEW MODAL (STICKY HEADER + SCROLLABLE BODY + STICKY FOOTER) */}
       {(spotlightSuite || spotlightProduct) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#1E1B4B]/40 backdrop-blur-md">
-          <div className="glass-surface glass-modal-card w-full max-w-2xl rounded-3xl bg-white/95 overflow-hidden max-h-[90vh] flex flex-col">
-            {spotlightProduct && !spotlightSuite && (
-              <ProductBannerArt
-                product={spotlightProduct}
-                failedImage={Boolean(failedImages[spotlightProduct.id])}
-                onImageError={() =>
-                  setFailedImages((prev) => ({ ...prev, [spotlightProduct.id]: true }))
-                }
-              />
-            )}
-            <div className="p-6 space-y-4 overflow-y-auto">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-violet-700">
-                    {spotlightSuite
-                      ? spotlightSuite.suiteLabel
-                      : `${spotlightProduct?.category} · Ready Solution`}
-                  </span>
-                  <h3 className="text-lg sm:text-xl font-extrabold text-[#141129] mt-1">
-                    {spotlightSuite ? spotlightSuite.title : spotlightProduct?.title}
-                  </h3>
-                  {spotlightSuite?.subtitle && (
-                    <p className="text-xs font-semibold text-[#3B3561] mt-1">
-                      {spotlightSuite.subtitle}
-                    </p>
-                  )}
-                  {spotlightSuite?.platforms && (
-                    <p className="text-[11px] font-medium text-[#5B5480] mt-1">
-                      {spotlightSuite.platforms}
-                    </p>
-                  )}
-                  {spotlightSuite?.releaseNote && (
-                    <p className="text-[11px] font-bold text-violet-800 mt-1">
-                      {spotlightSuite.releaseNote}
-                    </p>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSpotlightSuite(null);
-                    setSpotlightProduct(null);
-                  }}
-                  className="btn-standard-soft rounded-xl p-2 shrink-0"
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="suite-modal-title"
+          onClick={() => {
+            setSpotlightSuite(null);
+            setSpotlightProduct(null);
+          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-[#17122E]/45 backdrop-blur-md"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="glass-surface glass-modal-card w-full max-w-2xl rounded-3xl bg-white/96 overflow-hidden max-h-[90vh] flex flex-col border border-violet-200/85"
+          >
+            {/* Sticky Modal Header */}
+            <div className="px-5 sm:px-6 py-4 border-b border-violet-200/70 bg-white/90 backdrop-blur-xl flex items-start justify-between gap-4 shrink-0">
+              <div className="min-w-0">
+                <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-violet-700">
+                  {spotlightSuite
+                    ? spotlightSuite.suiteLabel
+                    : `${spotlightProduct?.category} · Ready Solution`}
+                </span>
+                <h3
+                  id="suite-modal-title"
+                  className="text-lg sm:text-xl font-extrabold text-[#17122E] mt-0.5 leading-snug"
                 >
-                  <X className="w-4 h-4" />
-                </button>
+                  {spotlightSuite ? spotlightSuite.title : spotlightProduct?.title}
+                </h3>
+                {spotlightSuite?.subtitle && (
+                  <p className="text-xs font-semibold text-[#3B3561] mt-1">
+                    {spotlightSuite.subtitle}
+                  </p>
+                )}
               </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSpotlightSuite(null);
+                  setSpotlightProduct(null);
+                }}
+                aria-label="Close Overview Modal"
+                className="btn-standard-soft rounded-xl w-10 h-10 p-0 shrink-0"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
-              {spotlightSuite ? (
-                <div className="space-y-3">
+            {/* Scrollable Modal Body */}
+            <div className="overflow-y-auto flex-1">
+              {spotlightProduct && !spotlightSuite && (
+                <ProductBannerArt
+                  product={spotlightProduct}
+                  failedImage={Boolean(failedImages[spotlightProduct.id])}
+                  onImageError={() =>
+                    setFailedImages((prev) => ({ ...prev, [spotlightProduct.id]: true }))
+                  }
+                />
+              )}
+
+              <div className="p-5 sm:p-6 space-y-4">
+                {(spotlightSuite?.platforms || spotlightSuite?.releaseNote) && (
                   <div className="glass-inner-tile rounded-2xl p-4 space-y-1">
-                    <div className="text-[11px] font-extrabold uppercase tracking-wider text-violet-700">
-                      What This Software Does
-                    </div>
-                    <p className="text-xs sm:text-sm leading-relaxed text-[#47416A]">
-                      {spotlightSuite.whatItDoes}
-                    </p>
+                    {spotlightSuite.platforms && (
+                      <p className="text-xs font-semibold text-[#3B3561]">
+                        {spotlightSuite.platforms}
+                      </p>
+                    )}
+                    {spotlightSuite.releaseNote && (
+                      <p className="text-xs font-bold text-violet-800">
+                        {spotlightSuite.releaseNote}
+                      </p>
+                    )}
                   </div>
+                )}
 
-                  <div className="glass-inner-tile rounded-2xl p-4 space-y-1">
-                    <div className="text-[11px] font-extrabold uppercase tracking-wider text-violet-700">
-                      How It Works For Your Team
+                {spotlightSuite ? (
+                  <div className="space-y-3.5">
+                    <div className="glass-inner-tile rounded-2xl p-4 space-y-1">
+                      <div className="text-[11px] font-extrabold uppercase tracking-wider text-violet-700">
+                        What This Software Does
+                      </div>
+                      <p className="text-[13px] sm:text-sm leading-relaxed text-[#47416A]">
+                        {spotlightSuite.whatItDoes}
+                      </p>
                     </div>
-                    <p className="text-xs sm:text-sm leading-relaxed text-[#47416A]">
-                      {spotlightSuite.howItWorks}
-                    </p>
+
+                    <div className="glass-inner-tile rounded-2xl p-4 space-y-1">
+                      <div className="text-[11px] font-extrabold uppercase tracking-wider text-violet-700">
+                        How It Works For Your Team
+                      </div>
+                      <p className="text-[13px] sm:text-sm leading-relaxed text-[#47416A]">
+                        {spotlightSuite.howItWorks}
+                      </p>
+                    </div>
+
+                    {spotlightSuite.highlights && spotlightSuite.highlights.length > 0 && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {spotlightSuite.highlights.map((item) => (
+                          <div
+                            key={item.title}
+                            className="glass-inner-tile rounded-2xl p-3.5 space-y-1"
+                          >
+                            <div className="text-xs font-extrabold text-[#17122E]">
+                              {item.title}
+                            </div>
+                            <p className="text-xs leading-relaxed text-[#47416A]">{item.desc}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="glass-inner-tile rounded-2xl p-4 space-y-2">
+                      <div className="text-[11px] font-extrabold uppercase tracking-wider text-violet-700">
+                        Key Business Benefits
+                      </div>
+                      <ul className="space-y-2 text-[13px] sm:text-sm text-[#2E2759]">
+                        {spotlightSuite.benefits.map((benefit) => (
+                          <li key={benefit} className="flex items-start gap-2">
+                            <Check className="w-4 h-4 text-violet-700 shrink-0 mt-0.5" />
+                            <span>{benefit}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
-
-                  {spotlightSuite.highlights && spotlightSuite.highlights.length > 0 && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                      {spotlightSuite.highlights.map((item) => (
-                        <div key={item.title} className="glass-inner-tile rounded-2xl p-3.5 space-y-1">
-                          <div className="text-xs font-extrabold text-[#141129]">{item.title}</div>
-                          <p className="text-[11.5px] leading-relaxed text-[#47416A]">{item.desc}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="glass-inner-tile rounded-2xl p-4 space-y-2">
-                    <div className="text-[11px] font-extrabold uppercase tracking-wider text-violet-700">
-                      Key Business Benefits
-                    </div>
-                    <ul className="space-y-2 text-xs sm:text-sm text-[#2E2759]">
-                      {spotlightSuite.benefits.map((benefit) => (
-                        <li key={benefit} className="flex items-start gap-2">
+                ) : (
+                  <>
+                    <p className="text-[13px] sm:text-sm leading-relaxed text-[#47416A]">
+                      {spotlightProduct?.description}
+                    </p>
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-[13px] text-[#2E2759]">
+                      {(spotlightProduct?.features ?? []).map((feat) => (
+                        <li key={feat} className="flex items-start gap-2">
                           <Check className="w-4 h-4 text-violet-700 shrink-0 mt-0.5" />
-                          <span>{benefit}</span>
+                          <span>{feat}</span>
                         </li>
                       ))}
                     </ul>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <p className="text-xs sm:text-sm leading-relaxed text-[#47416A]">
-                    {spotlightProduct?.description}
-                  </p>
-                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-[#2E2759]">
-                    {(spotlightProduct?.features ?? []).map((feat) => (
-                      <li key={feat} className="flex items-start gap-2">
-                        <Check className="w-4 h-4 text-violet-700 shrink-0 mt-0.5" />
-                        <span>{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
-
-              <div className="flex flex-wrap gap-2.5 pt-2">
-                {spotlightSuite?.websiteUrl && spotlightSuite?.websiteLabel && (
-                  <a
-                    href={spotlightSuite.websiteUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-standard-soft rounded-xl px-4 py-2.5 text-xs"
-                  >
-                    <Globe className="w-3.5 h-3.5" />
-                    Visit {spotlightSuite.websiteLabel}
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
+                  </>
                 )}
+              </div>
+            </div>
+
+            {/* Sticky Modal Action Footer */}
+            <div className="px-5 sm:px-6 py-3.5 border-t border-violet-200/70 bg-white/92 backdrop-blur-xl flex flex-wrap items-center gap-2.5 shrink-0">
+              {spotlightSuite?.websiteUrl && spotlightSuite?.websiteLabel && (
                 <a
-                  href={buildWhatsAppUrl(
-                    `Hello Make Your Fly Easy Team, I would like a live demonstration of ${
-                      spotlightSuite ? spotlightSuite.title : spotlightProduct?.title
-                    }.`
-                  )}
+                  href={spotlightSuite.websiteUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-standard-primary rounded-xl px-5 py-2.5 text-xs flex-1"
+                  className="btn-standard-soft rounded-xl px-4 py-2.5 text-xs"
                 >
-                  <MessageCircle className="w-4 h-4" />
-                  Request Live Demo on WhatsApp
+                  <Globe className="w-3.5 h-3.5" />
+                  Visit {spotlightSuite.websiteLabel}
+                  <ExternalLink className="w-3.5 h-3.5" />
                 </a>
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleRequestCustomBuild(
-                      spotlightSuite ? spotlightSuite.title : spotlightProduct?.title || 'Ready ERP'
-                    )
-                  }
-                  className="btn-standard-glass rounded-xl px-4 py-2.5 text-xs"
-                >
-                  Book via Contact Desk
-                  <ArrowRight className="w-3.5 h-3.5 text-violet-700" />
-                </button>
-              </div>
+              )}
+              <a
+                href={buildWhatsAppUrl(
+                  `Hello Make Your Fly Easy Team, I would like a live demonstration of ${
+                    spotlightSuite ? spotlightSuite.title : spotlightProduct?.title
+                  }.`
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-standard-primary rounded-xl px-5 py-2.5 text-xs flex-1 min-w-[200px]"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Request Live Demo on WhatsApp
+              </a>
+              <button
+                type="button"
+                onClick={() =>
+                  handleRequestCustomBuild(
+                    spotlightSuite ? spotlightSuite.title : spotlightProduct?.title || 'Ready ERP'
+                  )
+                }
+                className="btn-standard-glass rounded-xl px-4 py-2.5 text-xs"
+              >
+                Book via Contact Desk
+                <ArrowRight className="w-3.5 h-3.5 text-violet-700" />
+              </button>
             </div>
           </div>
         </div>
@@ -2190,6 +2554,19 @@ export function App() {
         onSelectTab={(tab) => setLegalTab(tab)}
         onClose={() => setLegalTab(null)}
       />
+
+      {/* FLOATING SCROLL-TO-TOP FROSTED GLASS BUTTON */}
+      {showScrollTop && (
+        <button
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          aria-label="Scroll to top"
+          title="Back to top"
+          className="no-print fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom))] right-[1.625rem] z-40 w-11 h-11 rounded-full bg-white/90 hover:bg-white text-violet-800 border border-violet-300/80 shadow-[0_8px_22px_-4px_rgba(46,16,101,0.22)] backdrop-blur-xl flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 active:scale-95 cursor-pointer"
+        >
+          <ArrowUp className="w-4 h-4" />
+        </button>
+      )}
 
       {/* FLOATING BOTTOM-RIGHT WHATSAPP BUTTON (CLASSIC GREEN ICON ONLY — NO NUMBER) */}
       <a

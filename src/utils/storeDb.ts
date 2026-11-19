@@ -1,11 +1,6 @@
 /**
- * IndexedDB + LocalStorage Persistence Engine for Make Your Fly Easy
- * Domain-Based Corporate Marketing, Product Showcase & Demo Portal
- * Stores:
- * 1. Demo Store Products (metadata, features, download counts, access control, external URLs, thumbnail DataURLs)
- * 2. Uploaded Binary Files (APK, ZIP, EXE, PDF blobs stored in IndexedDB `app_files` store)
- * 3. Registered Clients (Name, Company, WhatsApp Mobile, Email, Password, RegisteredAt)
- * 4. Master Admin Settings (Admin Password override, session state)
+ * Product Catalog Local Persistence Engine for Make Your Fly Easy
+ * Stores normalized public software suite metadata in LocalStorage with safe fallback.
  */
 
 export type StoreCategory =
@@ -46,33 +41,7 @@ export interface StoreAppProduct {
   accentColor?: 'gold' | 'cyan' | 'emerald';
 }
 
-export interface RegisteredClient {
-  id: string;
-  fullName: string;
-  companyName: string;
-  whatsapp: string;
-  whatsappNumber?: string;
-  email: string;
-  password: string;
-  registeredAt: string;
-  createdAt?: string;
-}
-
-export interface ActiveSession {
-  role: 'client' | 'admin';
-  name: string;
-  companyName?: string;
-  company?: string;
-  email: string;
-  whatsapp?: string;
-}
-
-const DB_NAME = 'MYFE_Enterprise_Store_DB';
-const DB_VERSION = 1;
 const STORE_PRODUCTS_KEY = 'myfe_store_products_v2';
-const STORE_CLIENTS_KEY = 'myfe_registered_clients_v2';
-const STORE_SESSION_KEY = 'myfe_active_session_v2';
-const STORE_ADMIN_PASS_KEY = 'myfe_admin_password_v2';
 
 export const DEFAULT_DEMO_PRODUCTS: StoreAppProduct[] = [
   {
@@ -199,9 +168,9 @@ function normalizeProduct(raw: Partial<StoreAppProduct>, idx: number): StoreAppP
     id: typeof raw.id === 'string' && raw.id ? raw.id : `prod-${idx + 1}`,
     title: typeof raw.title === 'string' && raw.title ? raw.title : 'Enterprise Software Suite',
     category: (raw.category as StoreCategory) || 'Customs & Logistics ERPs',
-    version: typeof raw.version === 'string' && raw.version ? raw.version : 'v1.0',
-    platform: typeof raw.platform === 'string' && raw.platform ? raw.platform : 'Windows / Web / Android APK',
-    fileSize: typeof raw.fileSize === 'string' && raw.fileSize ? raw.fileSize : '25.0 MB',
+    version: typeof raw.version === 'string' && raw.version ? raw.version : 'Ready Suite',
+    platform: typeof raw.platform === 'string' && raw.platform ? raw.platform : 'Office & Mobile Access',
+    fileSize: typeof raw.fileSize === 'string' && raw.fileSize ? raw.fileSize : 'Ready Setup',
     downloadsCount: rawDownloads,
     downloads: rawDownloads,
     description: typeof raw.description === 'string' ? raw.description : '',
@@ -226,7 +195,7 @@ function normalizeProduct(raw: Partial<StoreAppProduct>, idx: number): StoreAppP
         : typeof raw.uploadedFileName === 'string'
         ? raw.uploadedFileName
         : undefined,
-    requireLogin: Boolean(raw.requireLogin),
+    requireLogin: false,
     publishedAt:
       typeof raw.publishedAt === 'string'
         ? raw.publishedAt
@@ -241,132 +210,12 @@ function normalizeProduct(raw: Partial<StoreAppProduct>, idx: number): StoreAppP
     installInstructions:
       typeof raw.installInstructions === 'string' && raw.installInstructions
         ? raw.installInstructions
-        : '1. Review included modules and operational workflows.\n2. Schedule a live walkthrough with our Karachi engineering desk.\n3. Contact +92-339-8884124 on WhatsApp or +93-321-9222883 for full deployment.',
+        : 'Schedule a live walkthrough with our Karachi engineering desk via WhatsApp (+92-339-8884124) or Direct Mobile (+93-321-9222883).',
     accentColor:
       raw.accentColor === 'gold' || raw.accentColor === 'cyan' || raw.accentColor === 'emerald'
         ? raw.accentColor
         : 'gold',
   };
-}
-
-function normalizeClient(raw: Partial<RegisteredClient>, idx: number): RegisteredClient {
-  const whatsappVal =
-    typeof raw.whatsapp === 'string'
-      ? raw.whatsapp
-      : typeof raw.whatsappNumber === 'string'
-      ? raw.whatsappNumber
-      : '';
-  const regDate =
-    typeof raw.registeredAt === 'string'
-      ? raw.registeredAt
-      : typeof raw.createdAt === 'string'
-      ? raw.createdAt
-      : '02 Nov 2026';
-
-  return {
-    id: typeof raw.id === 'string' && raw.id ? raw.id : `client-${idx + 1}`,
-    fullName: typeof raw.fullName === 'string' ? raw.fullName : 'Verified Client',
-    companyName: typeof raw.companyName === 'string' ? raw.companyName : 'Enterprise Client',
-    whatsapp: whatsappVal,
-    whatsappNumber: whatsappVal,
-    email: typeof raw.email === 'string' ? raw.email : '',
-    password: typeof raw.password === 'string' ? raw.password : '',
-    registeredAt: regDate,
-    createdAt: regDate,
-  };
-}
-
-function openDatabase(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    if (typeof window === 'undefined' || !window.indexedDB) {
-      reject(new Error('IndexedDB not supported'));
-      return;
-    }
-    const request = window.indexedDB.open(DB_NAME, DB_VERSION);
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains('app_files')) {
-        db.createObjectStore('app_files', { keyPath: 'appId' });
-      }
-      if (!db.objectStoreNames.contains('kv_store')) {
-        db.createObjectStore('kv_store', { keyPath: 'key' });
-      }
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-}
-
-export async function saveBinaryFileToDb(
-  appId: string,
-  fileOrName: File | string,
-  mimeType?: string,
-  blob?: Blob
-): Promise<void> {
-  const db = await openDatabase();
-  const resolvedFileName =
-    typeof fileOrName === 'string' ? fileOrName : fileOrName.name || `${appId}-installer.zip`;
-  const resolvedMime =
-    typeof fileOrName === 'string'
-      ? mimeType || 'application/octet-stream'
-      : fileOrName.type || 'application/octet-stream';
-  const resolvedBlob: Blob = typeof fileOrName === 'string' ? blob || new Blob([]) : fileOrName;
-
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction('app_files', 'readwrite');
-    const store = tx.objectStore('app_files');
-    store.put({
-      appId,
-      fileName: resolvedFileName,
-      mimeType: resolvedMime,
-      blob: resolvedBlob,
-      savedAt: new Date().toISOString(),
-    });
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-export async function getBinaryFileFromDb(
-  appId: string
-): Promise<{ fileName: string; mimeType: string; blob: Blob } | null> {
-  try {
-    const db = await openDatabase();
-    return await new Promise((resolve, reject) => {
-      const tx = db.transaction('app_files', 'readonly');
-      const store = tx.objectStore('app_files');
-      const req = store.get(appId);
-      req.onsuccess = () => {
-        if (req.result) {
-          resolve({
-            fileName: req.result.fileName,
-            mimeType: req.result.mimeType,
-            blob: req.result.blob,
-          });
-        } else {
-          resolve(null);
-        }
-      };
-      req.onerror = () => reject(req.error);
-    });
-  } catch {
-    return null;
-  }
-}
-
-export async function deleteBinaryFileFromDb(appId: string): Promise<void> {
-  try {
-    const db = await openDatabase();
-    await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction('app_files', 'readwrite');
-      const store = tx.objectStore('app_files');
-      store.delete(appId);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-  } catch {
-    // Ignore if DB unavailable
-  }
 }
 
 export function loadProductsFromStorage(): StoreAppProduct[] {
@@ -405,205 +254,6 @@ export function saveProductsToStorage(products: StoreAppProduct[]): void {
     const normalized = products.map((p, idx) => normalizeProduct(p, idx));
     localStorage.setItem(STORE_PRODUCTS_KEY, JSON.stringify(normalized));
   } catch {
-    // Fallback if quota reached
+    // Fallback silently if storage quota is reached
   }
-}
-
-export function loadClientsFromStorage(): RegisteredClient[] {
-  try {
-    const raw = localStorage.getItem(STORE_CLIENTS_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.map((c, idx) => normalizeClient(c, idx)) : [];
-  } catch {
-    return [];
-  }
-}
-
-export function saveClientsToStorage(clients: RegisteredClient[]): void {
-  try {
-    const normalized = clients.map((c, idx) => normalizeClient(c, idx));
-    localStorage.setItem(STORE_CLIENTS_KEY, JSON.stringify(normalized));
-  } catch {
-    // Ignore
-  }
-}
-
-export function loadSessionFromStorage(): ActiveSession | null {
-  try {
-    const raw = localStorage.getItem(STORE_SESSION_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-export function saveSessionToStorage(session: ActiveSession | null): void {
-  try {
-    if (!session) {
-      localStorage.removeItem(STORE_SESSION_KEY);
-    } else {
-      localStorage.setItem(STORE_SESSION_KEY, JSON.stringify(session));
-    }
-  } catch {
-    // Ignore
-  }
-}
-
-export function getAdminPassword(): string {
-  try {
-    return localStorage.getItem(STORE_ADMIN_PASS_KEY) || 'MYFE@786';
-  } catch {
-    return 'MYFE@786';
-  }
-}
-
-export function setAdminPassword(newPass: string): void {
-  try {
-    localStorage.setItem(STORE_ADMIN_PASS_KEY, newPass);
-  } catch {
-    // Ignore
-  }
-}
-
-/**
- * Builds the direct deep-link URL for a specific product (for Social Media Ads & Boosts)
- */
-export function buildProductBoostUrl(productId: string): string {
-  if (typeof window === 'undefined') {
-    return `https://myfe.org/?product=${encodeURIComponent(productId)}`;
-  }
-  const baseUrl = `${window.location.origin}${window.location.pathname}`;
-  return `${baseUrl}?product=${encodeURIComponent(productId)}`;
-}
-
-/**
- * Generates a high-converting Social Media Ad Caption
- * for Facebook, Instagram, LinkedIn, TikTok, and WhatsApp Campaigns.
- */
-export function generateSocialAdCaption(product: StoreAppProduct): string {
-  const directUrl = buildProductBoostUrl(product.id);
-  const safeFeatures = Array.isArray(product.features) ? product.features : [];
-  return `🚀 ${product.title.toUpperCase()} (${product.version}) — 100% READY FOR DEPLOYMENT!
-
-Looking to digitize and scale your business operations with Pakistan's Premier Enterprise Software House?
-Make Your Fly Easy brings you ${product.title} — engineered for speed, accuracy, and complete financial & operational control.
-
-✅ Key Highlights & Modules:
-${safeFeatures.map((f) => `• ${f}`).join('\n')}
-
-💻 Platform: ${product.platform}
-⚡ Status: Ready for Instant Setup & Live Customization!
-🔗 View Suite Details:
-👉 ${directUrl}
-
-📞 Book Your Live Demo on WhatsApp / Call:
-📲 WhatsApp: +92-339-8884124 (https://wa.me/923398884124)
-📱 Direct Mobile: +93-321-9222883 | Landline: 021-36601055
-📧 Email: info@myfe.org | 🌐 Web: myfe.org
-🏢 Head Office: Office Number 13, First Floor, State Life Building Number 7, G. Allana Road, Tower, Karachi, Pakistan.
-
-#MakeYourFlyEasy #EnterpriseSoftware #PakistanCustoms #LogisticsERP #LegalTechPakistan #BusinessFinance #CustomAppDevelopment #KarachiTech #SoftwareHousePakistan`;
-}
-
-/**
- * Generates an interactive standalone Demo Package HTML launcher file
- * when a visitor clicks "Download & Test Demo" on a product without a custom binary upload.
- */
-export function generateDemoPackageHtml(product: StoreAppProduct): string {
-  const safeFeatures = Array.isArray(product.features) ? product.features : [];
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${product.title} (${product.version}) — Make Your Fly Easy Official Demo Package</title>
-  <style>
-    body {
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: radial-gradient(circle at top left, rgba(167, 139, 250, 0.18), transparent 55%), #F8F7FC;
-      color: #141129;
-      margin: 0;
-      padding: 40px 20px;
-    }
-    .card {
-      max-width: 780px;
-      margin: 0 auto;
-      background: rgba(255, 255, 255, 0.88);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(124, 58, 237, 0.22);
-      border-radius: 20px;
-      padding: 36px;
-      box-shadow: 0 20px 50px rgba(46, 16, 101, 0.08);
-    }
-    .badge {
-      display: inline-block;
-      background: rgba(124, 58, 237, 0.1);
-      color: #6D28D9;
-      font-weight: 700;
-      font-size: 12px;
-      padding: 6px 12px;
-      border-radius: 8px;
-      letter-spacing: 0.06em;
-    }
-    h1 { font-size: 26px; margin: 16px 0 8px; color: #141129; }
-    .meta { font-family: monospace; font-size: 13px; color: #5B5480; margin-bottom: 20px; }
-    .box {
-      background: #F4F1FC;
-      border: 1px solid rgba(124, 58, 237, 0.28);
-      padding: 16px;
-      border-radius: 12px;
-      margin: 20px 0;
-      font-family: monospace;
-      font-size: 13px;
-      color: #2E1065;
-    }
-    ul { line-height: 1.8; color: #362F5A; }
-    .btn {
-      display: inline-block;
-      background: linear-gradient(135deg, #6D28D9, #7C3AED);
-      color: #FFFFFF;
-      text-decoration: none;
-      padding: 14px 24px;
-      border-radius: 12px;
-      font-weight: 700;
-      margin-top: 20px;
-      box-shadow: 0 10px 24px rgba(109, 40, 217, 0.35);
-    }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <span class="badge">${product.trialDuration || 'TRIAL DEMO EDITION'} · MAKE YOUR FLY EASY</span>
-    <h1>${product.title}</h1>
-    <div class="meta">Version: ${product.version} | Platform: ${product.platform} | Category: ${product.category}</div>
-    <p>${product.description}</p>
-    <div class="box">
-      <strong>Trial Activation &amp; Login Credentials:</strong><br/>
-      ${product.demoCredentials || 'Instant Trial Sandbox Activated (No Key Required)'}
-    </div>
-    ${
-      product.installInstructions
-        ? `<div class="box"><strong>Installation &amp; Testing Steps:</strong><br/>${product.installInstructions.replace(
-            /\n/g,
-            '<br/>'
-          )}</div>`
-        : ''
-    }
-    <h3>Included Enterprise Modules &amp; Capabilities:</h3>
-    <ul>
-      ${safeFeatures.map((f) => `<li>${f}</li>`).join('')}
-    </ul>
-    <hr style="border:none; border-top:1px solid #E9E4F7; margin:24px 0;" />
-    <p style="font-size:14px; color:#4C456E;">
-      <strong>Make Your Fly Easy — Enterprise Software House &amp; Custom App Studio</strong><br/>
-      Office Number 13, First Floor, State Life Building Number 7, G. Allana Road, Tower, Karachi, Pakistan.<br/>
-      Direct Mobile: +93-321-9222883 | WhatsApp: +92-339-8884124 | Landline: 021-36601055 | Email: info@myfe.org | Web: myfe.org
-    </p>
-    <a class="btn" href="https://wa.me/923398884124?text=${encodeURIComponent(
-      `Hello Make Your Fly Easy Team, I would like a live walkthrough and commercial activation for ${product.title} (${product.version}).`
-    )}">Request Live Demo on WhatsApp →</a>
-  </div>
-</body>
-</html>`;
 }

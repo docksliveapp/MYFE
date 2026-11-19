@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AlertTriangle, Database, Lock, Scale, X } from 'lucide-react';
 
 export type LegalTab = 'privacy' | 'terms';
@@ -14,47 +14,72 @@ export const LegalSecurityModal: React.FC<LegalSecurityModalProps> = ({
   onSelectTab,
   onClose,
 }) => {
+  useEffect(() => {
+    if (!activeTab) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [activeTab, onClose]);
+
   if (!activeTab) return null;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-[#1E1B4B]/45 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-[#17122E]/45 backdrop-blur-md"
       role="dialog"
       aria-modal="true"
-      aria-label="Privacy Policy and Terms & Conditions"
+      aria-labelledby="legal-modal-heading"
+      onClick={onClose}
     >
-      <div className="glass-surface glass-modal-card w-full max-w-4xl rounded-3xl bg-white/95 overflow-hidden max-h-[90vh] flex flex-col">
-        {/* Top Modal Header */}
-        <div className="px-5 sm:px-7 pt-5 pb-4 border-b border-violet-200/70 bg-gradient-to-r from-[#F4F0FF] via-white to-[#EFE8FF] flex items-start justify-between gap-4">
-          <div>
-            <span className="text-[11px] font-extrabold uppercase tracking-widest text-violet-700">
+      <div
+        className="glass-surface glass-modal-card w-full max-w-4xl rounded-3xl bg-white/95 overflow-hidden max-h-[90vh] flex flex-col shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Sticky Modal Header */}
+        <div className="px-5 sm:px-7 pt-5 pb-4 border-b border-violet-200/70 bg-gradient-to-r from-[#F6F2FF] via-white to-[#F2EBFF] flex items-start justify-between gap-4 shrink-0">
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold tracking-[0.14em] uppercase text-violet-700">
               Make Your Fly Easy · Legal &amp; Protection Center
-            </span>
-            <h3 className="text-lg sm:text-2xl font-extrabold text-[#141129] mt-1">
+            </p>
+            <h3
+              id="legal-modal-heading"
+              className="text-lg sm:text-2xl font-extrabold text-[#17122E] mt-1"
+            >
               {activeTab === 'privacy'
                 ? 'Privacy Policy & Data Protection'
                 : 'Terms & Conditions of Service'}
             </h3>
-            <p className="text-xs text-[#5B5480] mt-0.5">
-              Effective Date: November 2026 · Applicable across myfe.org &amp; all MYFE Softwares
+            <p className="text-xs text-[#5C5482] mt-1">
+              Effective Date: November 2026 · Applicable across myfe.org &amp; all MYFE software suites
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close Legal Window"
-            className="btn-standard-soft rounded-xl p-2.5 shrink-0"
+            aria-label="Close legal dialog"
+            className="btn-standard-soft rounded-xl w-10 h-10 p-0 shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* 2-Tab Navigation */}
-        <div className="px-5 sm:px-7 py-3 border-b border-violet-200/60 bg-white/80 flex flex-wrap gap-2">
+        {/* Clean Segmented Tab Controls */}
+        <div className="px-5 sm:px-7 py-3 border-b border-violet-200/60 bg-white/90 flex flex-wrap gap-2 shrink-0">
           <button
             type="button"
             onClick={() => onSelectTab('privacy')}
-            className={`rounded-xl px-3.5 py-2 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+            aria-pressed={activeTab === 'privacy'}
+            className={`rounded-xl px-4 py-2 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
               activeTab === 'privacy'
                 ? 'btn-standard-primary'
                 : 'btn-standard-glass text-[#2E2759]'
@@ -66,7 +91,8 @@ export const LegalSecurityModal: React.FC<LegalSecurityModalProps> = ({
           <button
             type="button"
             onClick={() => onSelectTab('terms')}
-            className={`rounded-xl px-3.5 py-2 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+            aria-pressed={activeTab === 'terms'}
+            className={`rounded-xl px-4 py-2 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
               activeTab === 'terms'
                 ? 'btn-standard-primary'
                 : 'btn-standard-glass text-[#2E2759]'
@@ -77,12 +103,12 @@ export const LegalSecurityModal: React.FC<LegalSecurityModalProps> = ({
           </button>
         </div>
 
-        {/* Scrollable Body */}
-        <div className="p-5 sm:p-7 overflow-y-auto space-y-4 text-xs sm:text-sm leading-relaxed text-[#362F5A]">
+        {/* Scrollable Legal Content */}
+        <div className="p-5 sm:p-7 overflow-y-auto space-y-4 text-[13px] sm:text-sm leading-relaxed text-[#372F5C]">
           {activeTab === 'privacy' && (
             <>
               <div className="glass-inner-tile rounded-2xl p-4 sm:p-5 space-y-2">
-                <h4 className="text-sm sm:text-base font-extrabold text-[#141129]">
+                <h4 className="text-sm sm:text-base font-extrabold text-[#17122E]">
                   1. Information We Collect &amp; Purpose
                 </h4>
                 <p>
@@ -97,7 +123,7 @@ export const LegalSecurityModal: React.FC<LegalSecurityModalProps> = ({
               </div>
 
               <div className="glass-inner-tile rounded-2xl p-4 sm:p-5 space-y-2">
-                <h4 className="text-sm sm:text-base font-extrabold text-[#141129]">
+                <h4 className="text-sm sm:text-base font-extrabold text-[#17122E]">
                   2. Client Business Records Confidentiality
                 </h4>
                 <p>
@@ -109,8 +135,8 @@ export const LegalSecurityModal: React.FC<LegalSecurityModalProps> = ({
                 </p>
               </div>
 
-              <div className="glass-inner-tile rounded-2xl p-4 sm:p-5 space-y-2 border-l-4 border-l-violet-600">
-                <h4 className="text-sm sm:text-base font-extrabold text-[#141129] flex items-center gap-2">
+              <div className="rounded-2xl border border-violet-200/85 bg-[#F6F2FF]/75 p-4 sm:p-5 space-y-2">
+                <h4 className="text-sm sm:text-base font-extrabold text-[#17122E] flex items-center gap-2">
                   <Database className="w-4 h-4 text-violet-700 shrink-0" />
                   3. Built-In Data Backup Option &amp; Zero Data-Loss Liability
                 </h4>
@@ -127,8 +153,8 @@ export const LegalSecurityModal: React.FC<LegalSecurityModalProps> = ({
                 </p>
               </div>
 
-              <div className="glass-inner-tile rounded-2xl p-4 sm:p-5 space-y-2 border-l-4 border-l-violet-600">
-                <h4 className="text-sm sm:text-base font-extrabold text-[#141129] flex items-center gap-2">
+              <div className="rounded-2xl border border-violet-200/85 bg-[#F6F2FF]/75 p-4 sm:p-5 space-y-2.5">
+                <h4 className="text-sm sm:text-base font-extrabold text-[#17122E] flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-violet-700 shrink-0" />
                   4. Hacking, Theft, Staff Misuse &amp; Government Directives Disclaimer
                 </h4>
@@ -138,7 +164,7 @@ export const LegalSecurityModal: React.FC<LegalSecurityModalProps> = ({
                   computer is 100% immune from external threats.{' '}
                   <strong>Make Your Fly Easy is NOT liable for:</strong>
                 </p>
-                <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm">
+                <ul className="list-disc pl-5 space-y-1.5 text-[13px] sm:text-sm">
                   <li>
                     <strong>Hacking &amp; Cyber Attacks:</strong> Unauthorized access, malware,
                     ransomware, phishing, or third-party network intrusions arising from compromised
@@ -160,7 +186,7 @@ export const LegalSecurityModal: React.FC<LegalSecurityModalProps> = ({
               </div>
 
               <div className="glass-inner-tile rounded-2xl p-4 sm:p-5 space-y-2">
-                <h4 className="text-sm sm:text-base font-extrabold text-[#141129]">
+                <h4 className="text-sm sm:text-base font-extrabold text-[#17122E]">
                   5. Inquiry Storage, Deletion Requests &amp; Privacy Desk
                 </h4>
                 <p>
@@ -177,7 +203,7 @@ export const LegalSecurityModal: React.FC<LegalSecurityModalProps> = ({
           {activeTab === 'terms' && (
             <>
               <div className="glass-inner-tile rounded-2xl p-4 sm:p-5 space-y-2">
-                <h4 className="text-sm sm:text-base font-extrabold text-[#141129]">
+                <h4 className="text-sm sm:text-base font-extrabold text-[#17122E]">
                   1. Acceptance &amp; Scope of Services
                 </h4>
                 <p>
@@ -189,8 +215,8 @@ export const LegalSecurityModal: React.FC<LegalSecurityModalProps> = ({
                 </p>
               </div>
 
-              <div className="glass-inner-tile rounded-2xl p-4 sm:p-5 space-y-2 border-l-4 border-l-violet-600">
-                <h4 className="text-sm sm:text-base font-extrabold text-[#141129]">
+              <div className="rounded-2xl border border-violet-200/85 bg-[#F6F2FF]/75 p-4 sm:p-5 space-y-2">
+                <h4 className="text-sm sm:text-base font-extrabold text-[#17122E]">
                   2. Government Bans, Regulatory Shutdowns &amp; Force Majeure
                 </h4>
                 <p>
@@ -208,8 +234,8 @@ export const LegalSecurityModal: React.FC<LegalSecurityModalProps> = ({
                 </p>
               </div>
 
-              <div className="glass-inner-tile rounded-2xl p-4 sm:p-5 space-y-2 border-l-4 border-l-violet-600">
-                <h4 className="text-sm sm:text-base font-extrabold text-[#141129]">
+              <div className="rounded-2xl border border-violet-200/85 bg-[#F6F2FF]/75 p-4 sm:p-5 space-y-2">
+                <h4 className="text-sm sm:text-base font-extrabold text-[#17122E]">
                   3. Cyber Attacks, Hacking &amp; Security Responsibilities
                 </h4>
                 <p>
@@ -223,8 +249,8 @@ export const LegalSecurityModal: React.FC<LegalSecurityModalProps> = ({
                 </p>
               </div>
 
-              <div className="glass-inner-tile rounded-2xl p-4 sm:p-5 space-y-2 border-l-4 border-l-violet-600">
-                <h4 className="text-sm sm:text-base font-extrabold text-[#141129]">
+              <div className="rounded-2xl border border-violet-200/85 bg-[#F6F2FF]/75 p-4 sm:p-5 space-y-2">
+                <h4 className="text-sm sm:text-base font-extrabold text-[#17122E]">
                   4. Theft, Employee Fraud &amp; Internal Misuse
                 </h4>
                 <p>
@@ -241,8 +267,8 @@ export const LegalSecurityModal: React.FC<LegalSecurityModalProps> = ({
                 </p>
               </div>
 
-              <div className="glass-inner-tile rounded-2xl p-4 sm:p-5 space-y-2 border-l-4 border-l-violet-600">
-                <h4 className="text-sm sm:text-base font-extrabold text-[#141129]">
+              <div className="rounded-2xl border border-violet-200/85 bg-[#F6F2FF]/75 p-4 sm:p-5 space-y-2">
+                <h4 className="text-sm sm:text-base font-extrabold text-[#17122E]">
                   5. Mandatory Client Data Backup &amp; Zero Data-Loss Liability
                 </h4>
                 <p>
@@ -260,7 +286,7 @@ export const LegalSecurityModal: React.FC<LegalSecurityModalProps> = ({
               </div>
 
               <div className="glass-inner-tile rounded-2xl p-4 sm:p-5 space-y-2">
-                <h4 className="text-sm sm:text-base font-extrabold text-[#141129]">
+                <h4 className="text-sm sm:text-base font-extrabold text-[#17122E]">
                   6. Intellectual Property, Licensing &amp; Payment Terms
                 </h4>
                 <p>
@@ -275,7 +301,7 @@ export const LegalSecurityModal: React.FC<LegalSecurityModalProps> = ({
               </div>
 
               <div className="glass-inner-tile rounded-2xl p-4 sm:p-5 space-y-2">
-                <h4 className="text-sm sm:text-base font-extrabold text-[#141129]">
+                <h4 className="text-sm sm:text-base font-extrabold text-[#17122E]">
                   7. Accuracy Verification, Liability Cap, Indemnification &amp; Law
                 </h4>
                 <p>
@@ -295,16 +321,16 @@ export const LegalSecurityModal: React.FC<LegalSecurityModalProps> = ({
           )}
         </div>
 
-        {/* Footer Strip Inside Modal */}
-        <div className="px-5 sm:px-7 py-3.5 border-t border-violet-200/70 bg-white/90 flex flex-wrap items-center justify-between gap-3">
-          <p className="text-[11px] text-[#5B5480]">
-            Questions? Contact Karachi HQ at <strong className="text-[#141129]">info@myfe.org</strong>{' '}
-            or WhatsApp <strong className="text-[#141129]">+92-339-8884124</strong>
+        {/* Sticky Modal Footer */}
+        <div className="px-5 sm:px-7 py-3.5 border-t border-violet-200/70 bg-white/95 flex flex-wrap items-center justify-between gap-3 shrink-0">
+          <p className="text-xs text-[#5C5482]">
+            Questions? Contact Karachi HQ at <strong className="text-[#17122E]">info@myfe.org</strong>{' '}
+            or WhatsApp <strong className="text-[#17122E] tabular-nums">+92-339-8884124</strong>
           </p>
           <button
             type="button"
             onClick={onClose}
-            className="btn-standard-primary rounded-xl px-5 py-2 text-xs"
+            className="btn-standard-primary rounded-xl px-5 py-2.5 text-xs"
           >
             Close
           </button>
